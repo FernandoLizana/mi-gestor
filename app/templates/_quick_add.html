@@ -1,0 +1,181 @@
+<!-- Botón flotante (+) -->
+<div class="fab-wrap">
+  <button class="fab btn btn-primary rounded-circle shadow" data-bs-toggle="dropdown" title="Agregar rápido (N)">
+    <i class="bi bi-plus-lg"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><h6 class="dropdown-header">Crear rápido</h6></li>
+    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#qmCliente"><i class="bi bi-person-plus"></i> Cliente <span class="text-muted small float-end">C</span></a></li>
+    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#qmProyecto"><i class="bi bi-kanban"></i> Proyecto <span class="text-muted small float-end">P</span></a></li>
+    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#qmInteraccion"><i class="bi bi-chat-text"></i> Interacción cliente <span class="text-muted small float-end">I</span></a></li>
+    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#qmPost"><i class="bi bi-megaphone"></i> Post / borrador <span class="text-muted small float-end">B</span></a></li>
+    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#qmTareaSocial"><i class="bi bi-send"></i> Tarea redes (DM) <span class="text-muted small float-end">D</span></a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mSearch"><i class="bi bi-search"></i> Buscar… <span class="text-muted small float-end">Ctrl+K</span></a></li>
+  </ul>
+</div>
+
+<!-- ============= BÚSQUEDA GLOBAL ============= -->
+<div class="modal fade" id="mSearch" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-body p-2">
+        <input id="qSearchInput" class="form-control form-control-lg border-0" placeholder="Buscar clientes, proyectos, posts…" autocomplete="off">
+        <div id="qSearchResults" class="list-group list-group-flush mt-2"></div>
+        <div class="text-muted small p-2">
+          <kbd>↑</kbd> <kbd>↓</kbd> navegar · <kbd>Enter</kbd> abrir · <kbd>Esc</kbd> cerrar
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============= MODALES QUICK-ADD ============= -->
+<!-- Cliente: solo nombre obligatorio -->
+<div class="modal fade" id="qmCliente" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" data-quick-form data-endpoint="{{ url_for('quick.quick_cliente') }}">
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-person-plus"></i> Nuevo cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><input class="form-control form-control-lg" name="nombre" placeholder="Nombre*" required autofocus></div>
+        <div class="row g-2">
+          <div class="col-md-6"><input class="form-control" name="telefono" placeholder="Teléfono"></div>
+          <div class="col-md-6"><input class="form-control" name="email" type="email" placeholder="Email"></div>
+        </div>
+        <a class="small d-block mt-2" data-bs-toggle="collapse" href="#qmClienteMore">Agregar más datos…</a>
+        <div class="collapse mt-2" id="qmClienteMore">
+          <div class="row g-2">
+            <div class="col-md-6"><input class="form-control" name="empresa" placeholder="Empresa"></div>
+            <div class="col-md-6"><input class="form-control" name="instagram" placeholder="@instagram"></div>
+            <div class="col-md-6"><select class="form-select" name="estado">
+              {% for e in ['prospecto','activo','inactivo','cerrado'] %}<option>{{e}}</option>{% endfor %}
+            </select></div>
+            <div class="col-12"><textarea class="form-control" name="notas" rows="2" placeholder="Notas"></textarea></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary">Guardar y abrir</button>
+        <button class="btn btn-outline-primary" data-stay="1">Guardar y crear otro</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Proyecto: nombre + cliente opcional + plantilla -->
+<div class="modal fade" id="qmProyecto" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="{{ url_for('projects.new_project') }}">
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-kanban"></i> Nuevo proyecto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><input class="form-control form-control-lg" name="nombre" placeholder="Nombre del proyecto*" required></div>
+        <div class="row g-2">
+          <div class="col-md-6"><select class="form-select" name="cliente_id" data-quick-cliente-select>
+            <option value="">Cliente (opcional)</option>
+            {% for c in _quick_clientes %}<option value="{{c.id}}">{{c.nombre}}{% if c.empresa %} — {{c.empresa}}{% endif %}</option>{% endfor %}
+          </select></div>
+          <div class="col-md-3"><input type="date" class="form-control" name="fecha_inicio" placeholder="Inicio"></div>
+          <div class="col-md-3"><input type="date" class="form-control" name="fecha_fin" placeholder="Fin"></div>
+        </div>
+        <textarea class="form-control mt-2" name="descripcion" rows="2" placeholder="Descripción (opcional)"></textarea>
+        <div class="form-text mt-2">¿Necesitas tareas predefinidas? Crea desde <a href="{{ url_for('projects.list_projects') }}">una plantilla</a> (Sercotec, Corfo, DS1, etc.)</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary">Crear proyecto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Interacción rápida -->
+<div class="modal fade" id="qmInteraccion" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" data-quick-form data-endpoint="{{ url_for('quick.quick_interaccion') }}" data-stay-on-success>
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-chat-text"></i> Registrar interacción</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-2">
+          <div class="col-md-7"><select class="form-select" name="cliente_id" required>
+            <option value="">Cliente*</option>
+            {% for c in _quick_clientes %}<option value="{{c.id}}">{{c.nombre}}</option>{% endfor %}
+          </select></div>
+          <div class="col-md-5"><select class="form-select" name="canal">
+            {% for ch in ['whatsapp','email','instagram','linkedin','llamada','reunión','otro'] %}<option>{{ch}}</option>{% endfor %}
+          </select></div>
+        </div>
+        <textarea class="form-control mt-2" name="resumen" rows="2" placeholder="Resumen de lo conversado*" required></textarea>
+        <div class="row g-2 mt-1">
+          <div class="col-md-8"><input class="form-control" name="proxima_accion" placeholder="Próxima acción (opcional)"></div>
+          <div class="col-md-4"><input type="date" class="form-control" name="proxima_fecha"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Post / borrador -->
+<div class="modal fade" id="qmPost" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form class="modal-content" data-quick-form data-endpoint="{{ url_for('quick.quick_post') }}">
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-megaphone"></i> Nuevo post / borrador</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-2">
+          <div class="col-md-3"><select class="form-select" name="plataforma">
+            {% for pl in ['instagram','linkedin','facebook','tiktok'] %}<option>{{pl}}</option>{% endfor %}
+          </select></div>
+          <div class="col-md-9"><input class="form-control" name="titulo" placeholder="Título / idea"></div>
+        </div>
+        <textarea class="form-control mt-2" name="contenido" rows="4" placeholder="Copy del post"></textarea>
+        <div class="row g-2 mt-2">
+          <div class="col-md-6"><input class="form-control" name="hashtags" placeholder="#hashtags"></div>
+          <div class="col-md-3"><input type="datetime-local" class="form-control" name="fecha_programada"></div>
+          <div class="col-md-3"><select class="form-select" name="proyecto_id">
+            <option value="">Proyecto (opc.)</option>
+            {% for p in _quick_proyectos %}<option value="{{p.id}}">{{p.nombre}}</option>{% endfor %}
+          </select></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary">Guardar y abrir</button>
+        <button class="btn btn-outline-primary" data-stay="1">Guardar y crear otro</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tarea social (DM) -->
+<div class="modal fade" id="qmTareaSocial" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" data-quick-form data-endpoint="{{ url_for('quick.quick_tarea_social') }}" data-stay-on-success>
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-send"></i> Tarea en redes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-2">
+          <div class="col-md-3"><select class="form-select" name="plataforma">
+            {% for pl in ['instagram','linkedin','facebook','tiktok'] %}<option>{{pl}}</option>{% endfor %}
+          </select></div>
+          <div class="col-md-3"><select class="form-select" name="tipo">
+            {% for t in ['DM','comentar','seguir','responder','dar like'] %}<option>{{t}}</option>{% endfor %}
+          </select></div>
+          <div class="col-md-6"><input class="form-control" name="objetivo" placeholder="@usuario o link"></div>
+        </div>
+        <textarea class="form-control mt-2" name="mensaje" rows="3" placeholder="Mensaje a enviar (opcional)"></textarea>
+        <input type="datetime-local" class="form-control mt-2" name="fecha">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>

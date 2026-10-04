@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Prospectos IA{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="page-title">
+    <span class="icon-bubble"><i class="bi bi-stars"></i></span>
+    <div>
+      <h1 class="h3 mb-1">Prospectos IA</h1>
+      <p class="text-muted mb-0">Analiza perfiles y genera mensajes personalizados para prospección ética.</p>
+    </div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('prospects.import_csv') }}"><i class="bi bi-filetype-csv"></i> CSV</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('prospects.import_instagram_bulk') }}"><i class="bi bi-instagram"></i> Instagram</a>
+    <a class="btn btn-primary" href="{{ url_for('prospects.new_prospect') }}"><i class="bi bi-plus-lg"></i> Nuevo prospecto</a>
+  </div>
+</div>
+
+{% if not prospectos and clientes_count %}
+<div class="alert alert-info">
+  <strong>Tus importaciones están en <a href="{{ url_for('clients.list_clients') }}">Clientes</a></strong>
+  ({{ clientes_count }} registros), no aquí.
+  <br><span class="small">「Prospectos IA」 es otra herramienta (Instagram + mensajes con IA). Los Excel que importaste van a la tabla <code>clientes</code> en MySQL.</span>
+</div>
+{% elif not prospectos and not clientes_count %}
+<div class="alert alert-warning small mb-3">
+  No hay registros. Si importaste en MySQL/phpMyAdmin pero ves esto vacío, entra al
+  <a href="{{ url_for('dashboard.index') }}">Dashboard</a> y revisa si dice <strong>SQLite</strong> en rojo — en ese caso el <code>.env</code> no está cargando <code>DB_HOST</code>.
+</div>
+{% endif %}
+
+<div class="btn-group btn-group-sm mb-3 flex-wrap">
+  <a href="{{ url_for('prospects.list_prospects') }}" class="btn btn-outline-secondary {% if not estado %}active{% endif %}">Todos</a>
+  <a href="{{ url_for('prospects.list_prospects', estado='mensaje_generado') }}" class="btn btn-outline-secondary {% if estado=='mensaje_generado' %}active{% endif %}">Con mensaje</a>
+  <a href="{{ url_for('prospects.list_prospects', estado='contactado') }}" class="btn btn-outline-secondary {% if estado=='contactado' %}active{% endif %}">Contactados</a>
+  <a href="{{ url_for('prospects.list_prospects', estado='nuevo') }}" class="btn btn-outline-secondary {% if estado=='nuevo' %}active{% endif %}">Nuevos</a>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Plataforma</th>
+          <th>Objetivo</th>
+          <th>Estado</th>
+          <th>Creado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in prospectos %}
+        <tr>
+          <td class="fw-semibold">{{ p.nombre or '(sin nombre)' }}</td>
+          <td>
+            {% if p.plataforma == 'instagram' %}<i class="bi bi-instagram platform-instagram"></i>
+            {% elif p.plataforma == 'linkedin' %}<i class="bi bi-linkedin platform-linkedin"></i>
+            {% elif p.plataforma == 'facebook' %}<i class="bi bi-facebook platform-facebook"></i>
+            {% else %}<i class="bi bi-globe text-muted"></i>{% endif %}
+            <span class="text-capitalize">{{ p.plataforma or '-' }}</span>
+          </td>
+          <td class="text-truncate" style="max-width: 380px;">{{ p.objetivo or '-' }}</td>
+          <td><span class="badge badge-est estado-{{ p.estado }}">{{ p.estado.replace('_', ' ') }}</span></td>
+          <td class="text-muted">{{ p.creado.strftime('%Y-%m-%d') if p.creado else '-' }}</td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('prospects.detail', pid=p.id) }}">Abrir <i class="bi bi-arrow-right"></i></a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">
+          <div class="empty-state">
+            <i class="bi bi-stars d-block mb-2"></i>
+            <p class="mb-3">Aún no tienes prospectos.</p>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('prospects.new_prospect') }}"><i class="bi bi-plus-lg"></i> Crear el primero</a>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

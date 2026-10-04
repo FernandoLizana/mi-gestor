@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Publicar · {{ post.titulo or 'Post' }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+  <div>
+    <a href="{{ url_for('social.index') }}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Redes</a>
+    <h2 class="h4 mb-1 mt-1">
+      <i class="bi bi-{{ post.plataforma }} platform-{{ post.plataforma }}"></i>
+      Modo publicación manual
+    </h2>
+    <p class="text-muted mb-0">{{ post.titulo or '(sin título)' }} · {{ queue_count }} en cola</p>
+  </div>
+  <a href="{{ url_for('social.edit_post', pid=post.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Editar</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card p-3 h-100">
+      <p class="small text-muted mb-3">Sigue estos pasos en orden (~2 min):</p>
+      <ol class="publish-steps">
+        <li>
+          <strong>Descarga la imagen</strong>
+          {% if post.imagen_path %}
+          <div class="mt-2 mb-2 text-center bg-light rounded p-2">
+            <img src="{{ crm_root }}/uploads/{{ post.imagen_path }}" alt="" class="publish-preview-img">
+          </div>
+          <a class="btn btn-primary w-100" href="{{ crm_root }}/uploads/{{ post.imagen_path }}" download>
+            <i class="bi bi-download"></i> Descargar imagen
+          </a>
+          {% else %}
+          <p class="text-muted small mt-1">Sin imagen. Genera una con IA o edita el borrador.</p>
+          <a href="{{ url_for('social.edit_post', pid=post.id) }}" class="btn btn-outline-primary btn-sm mt-1">Añadir imagen</a>
+          {% endif %}
+        </li>
+        <li>
+          <strong>Copia el texto</strong>
+          <p class="text-muted small mb-2">Usa el panel de la derecha → <em>Copiar todo</em>.</p>
+          <button type="button" class="btn btn-primary w-100" data-copy="#caption-full">
+            <i class="bi bi-clipboard"></i> Copiar texto completo
+          </button>
+        </li>
+        <li>
+          <strong>Publica en {{ post.plataforma }}</strong>
+          <ul class="small text-muted ps-3 mb-2 mt-1">
+            {% for tip in platform_tips %}
+            <li>{{ tip }}</li>
+            {% endfor %}
+          </ul>
+          <a class="btn btn-outline-dark w-100" href="{{ upload_url }}" target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right"></i> Abrir {{ post.plataforma }}
+          </a>
+        </li>
+        <li>
+          <strong>Confirma aquí</strong>
+          <p class="text-muted small mb-2">Para llevar el control en tu CRM.</p>
+          <form method="post" action="{{ url_for('social.mark_published', pid=post.id) }}">
+            {% if next_post %}
+            <input type="hidden" name="next_id" value="{{ next_post.id }}">
+            {% endif %}
+            <button class="btn btn-success btn-lg w-100" type="submit">
+              <i class="bi bi-check2-circle"></i> Ya lo publiqué
+            </button>
+          </form>
+          {% if next_post %}
+          <div class="form-text mt-2 text-center">Siguiente: {{ next_post.titulo or 'borrador' }}</div>
+          {% endif %}
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    {% if post.imagen_path %}
+    <div class="card p-3 mb-3 {% if post.plataforma == 'tiktok' %}tt-preview-card{% else %}ig-preview-card{% endif %}">
+      <div class="small text-muted mb-2">Vista previa aproximada · {{ post.plataforma }}</div>
+      {% if post.plataforma == 'tiktok' %}
+      <div class="tt-preview">
+        <img src="{{ crm_root }}/uploads/{{ post.imagen_path }}" alt="">
+        <div class="tt-preview-overlay">
+          <div class="tt-preview-user">@tu_cuenta</div>
+          <div class="tt-preview-caption">{{ caption_full[:120] }}{% if caption_full|length > 120 %}…{% endif %}</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="ig-preview">
+        <div class="ig-preview-header"><span class="ig-avatar"></span> tu_tarot</div>
+        <img src="{{ crm_root }}/uploads/{{ post.imagen_path }}" alt="">
+        <div class="ig-preview-caption">{{ caption_full[:280] }}{% if caption_full|length > 280 %}…{% endif %}</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    <div class="card p-3 mb-3">
+      <div class="small fw-semibold mb-2">Programar recordatorio</div>
+      <form method="post" action="{{ url_for('social.programar_post', pid=post.id) }}" class="d-flex flex-wrap gap-2">
+        <input type="hidden" name="next" value="publish">
+        <button type="submit" name="preset" value="manana10" class="btn btn-sm btn-outline-secondary">Mañana 10:00</button>
+        <button type="submit" name="preset" value="en2h" class="btn btn-sm btn-outline-secondary">En 2 horas</button>
+        <input type="datetime-local" class="form-control form-control-sm" name="fecha_programada" style="max-width:200px">
+        <button type="submit" class="btn btn-sm btn-primary">Guardar fecha</button>
+      </form>
+      {% if post.fecha_programada %}
+      <div class="form-text mt-1">Programado: {{ post.fecha_programada.strftime('%d/%m/%Y %H:%M') }}</div>
+      {% endif %}
+    </div>
+    <div class="card p-3 sticky-top" style="top:1rem;">
+      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <strong>Texto para pegar</strong>
+        <div class="btn-group btn-group-sm">
+          <button type="button" class="btn btn-outline-primary" data-copy="#caption-body">Solo copy</button>
+          <button type="button" class="btn btn-outline-primary" data-copy="#caption-tags" {% if not caption_tags %}disabled{% endif %}>Hashtags</button>
+          <button type="button" class="btn btn-primary" data-copy="#caption-full">Copiar todo</button>
+        </div>
+      </div>
+      <textarea id="caption-full" class="form-control font-monospace" rows="14" readonly>{{ caption_full }}</textarea>
+      <textarea id="caption-body" class="d-none" readonly>{{ caption_body }}</textarea>
+      <textarea id="caption-tags" class="d-none" readonly>{{ caption_tags }}</textarea>
+      <div class="form-text mt-2">
+        <i class="bi bi-info-circle"></i> Pega en la descripción de {{ post.plataforma }}. Luego marca como publicado.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('[data-copy]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const el = document.querySelector(btn.getAttribute('data-copy'));
+    if (!el || !el.value.trim()) return;
+    navigator.clipboard.writeText(el.value).then(() => {
+      const prev = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-check2"></i> Copiado';
+      btn.classList.add('btn-success');
+      setTimeout(() => { btn.innerHTML = prev; btn.classList.remove('btn-success'); }, 1600);
+    });
+  });
+});
+</script>
+{% endblock %}

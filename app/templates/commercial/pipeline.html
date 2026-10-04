@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Pipeline comercial{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css') }}">{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h2 class="h4 mb-0"><i class="bi bi-kanban"></i> Pipeline comercial</h2>
+  <a href="{{ url_for('commercial.importar') }}" class="btn btn-primary btn-sm"><i class="bi bi-upload"></i> Importar CSV</a>
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-2"><input class="form-control form-control-sm" name="q" placeholder="Buscar…" value="{{ filtros.get('q','') }}"></div>
+  <div class="col-md-2">
+    <select name="producto" class="form-select form-select-sm">
+      <option value="">Producto</option>
+      {% for p in productos %}<option value="{{ p.nombre }}" {% if filtros.get('producto')==p.nombre %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select name="prioridad" class="form-select form-select-sm">
+      <option value="">Prioridad</option>
+      {% for pr in prioridades %}<option value="{{ pr }}" {% if filtros.get('prioridad')==pr %}selected{% endif %}>{{ pr }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2"><button class="btn btn-sm btn-outline-secondary w-100">Filtrar</button></div>
+</form>
+<div class="pipeline-board" id="pipelineBoard" data-move-url="{{ url_for('commercial.pipeline_mover') }}">
+  {% for est in estados %}
+  <div class="pipeline-col" data-estado="{{ est }}">
+    <div class="pipeline-col-header" style="border-top: 3px solid {{ colors[est] }}">
+      <span>{{ est }}</span>
+      <span class="badge text-bg-secondary">{{ columns[est]|length }}</span>
+    </div>
+    <div class="pipeline-col-body">
+      {% for c in columns[est] %}
+      <article class="pipeline-card" draggable="true" data-id="{{ c.id }}">
+        <strong>{{ c.empresa or c.nombre }}</strong>
+        <div class="small text-muted">{{ c.producto_interes or 'Sin producto' }}</div>
+        <div class="small">{{ c.comuna or '' }}</div>
+        <div class="pipeline-card-meta">
+          <span class="badge-priority badge-priority--{{ c.prioridad|replace(' ','-') }}">{{ c.prioridad or 'media' }}</span>
+          {% if c.monto_oportunidad %}<span class="small">${{ '{:,.0f}'.format(c.monto_oportunidad) }}</span>{% endif %}
+        </div>
+        {% if c.proxima_accion %}<div class="small text-primary">{{ c.proxima_accion[:40] }}</div>{% endif %}
+        <div class="pipeline-card-actions">
+          <a href="{{ url_for('clients.detail', cid=c.id) }}" class="btn btn-sm btn-outline-secondary">Ficha</a>
+          {% if c.whatsapp or c.telefono %}
+          <a href="{{ url_for('commercial.mensaje_generar', cid=c.id) }}" class="btn btn-sm btn-success"><i class="bi bi-whatsapp"></i></a>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/commercial.js') }}"></script>
+{% endblock %}

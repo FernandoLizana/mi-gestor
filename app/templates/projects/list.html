@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Proyectos{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2><i class="bi bi-kanban"></i> Proyectos</h2>
+  <div>
+    <a href="{{ url_for('projects.rd_projects') }}" class="btn btn-outline-dark"><i class="bi bi-flask"></i> I+D interno</a>
+    <a href="{{ url_for('projects.wizard') }}" class="btn btn-success"><i class="bi bi-magic"></i> Asistente guiado</a>
+    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mPlantilla"><i class="bi bi-list-check"></i> Desde plantilla</button>
+    <a href="{{ url_for('projects.new_project') }}" class="btn btn-outline-primary"><i class="bi bi-plus"></i> Rápido</a>
+  </div>
+</div>
+
+<!-- Modal plantilla -->
+<div class="modal fade" id="mPlantilla" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="{{ url_for('projects.from_template') }}">
+      <div class="modal-header"><h5 class="modal-title">Crear proyecto desde plantilla</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label">Plantilla</label>
+          <select class="form-select" name="plantilla" id="selPlt" required>
+            {% for k, v in plantillas.items() %}
+            <option value="{{k}}" data-desc="{{v.descripcion}}" data-dur="{{v.duracion_dias}}" data-tareas="{{v.tareas|length}}">{{v.nombre}}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text" id="pltInfo"></div>
+        </div>
+        <div class="mb-3"><label class="form-label">Nombre del proyecto (opcional)</label>
+          <input class="form-control" name="nombre" placeholder="Por defecto: nombre de la plantilla"></div>
+        <div class="row">
+          <div class="col-md-6 mb-3"><label class="form-label">Fecha de inicio</label>
+            <input type="date" class="form-control" name="fecha_inicio" value="{{ today if today else '' }}"></div>
+          <div class="col-md-6 mb-3"><label class="form-label">Cliente (opcional)</label>
+            <select class="form-select" name="cliente_id">
+              <option value="">—</option>
+              {% for c in clientes %}<option value="{{c.id}}">{{c.nombre}}{% if c.empresa %} ({{c.empresa}}){% endif %}</option>{% endfor %}
+            </select></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary">Crear proyecto</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+(function(){
+  const sel = document.getElementById("selPlt"), info = document.getElementById("pltInfo");
+  function upd(){ const o = sel.options[sel.selectedIndex];
+    info.textContent = o.dataset.desc + " · " + o.dataset.tareas + " tareas · " + o.dataset.dur + " días."; }
+  sel.addEventListener("change", upd); upd();
+})();
+</script>
+<div class="card"><div class="card-body p-0">
+<table class="table table-hover mb-0">
+<thead><tr><th>Nombre</th><th>Cliente</th><th>Estado</th><th>Inicio</th><th>Fin</th><th>Tareas</th><th></th></tr></thead>
+<tbody>
+{% for p in proyectos %}
+<tr>
+  <td><a href="{{ url_for('projects.detail', pid=p.id) }}">{{ p.nombre }}</a></td>
+  <td>{{ p.cliente.nombre if p.cliente else '—' }}</td>
+  <td><span class="badge bg-info badge-est">{{ p.estado }}</span></td>
+  <td>{{ p.fecha_inicio.strftime('%d-%m-%Y') if p.fecha_inicio else '—' }}</td>
+  <td>{{ p.fecha_fin.strftime('%d-%m-%Y') if p.fecha_fin else '—' }}</td>
+  <td>{{ p.tareas|length }}</td>
+  <td><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('projects.edit_project', pid=p.id) }}"><i class="bi bi-pencil"></i></a></td>
+</tr>
+{% else %}
+<tr><td colspan="7" class="p-4 text-center text-muted">Sin proyectos aún.</td></tr>
+{% endfor %}
+</tbody></table>
+</div></div>
+{% endblock %}

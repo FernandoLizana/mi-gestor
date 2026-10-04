@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if p else 'Nuevo' }} prospecto{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="page-title">
+    <span class="icon-bubble"><i class="bi bi-{% if p %}pencil-square{% else %}plus-circle{% endif %}"></i></span>
+    <h1 class="h3 mb-0">{{ 'Editar' if p else 'Nuevo' }} prospecto IA</h1>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ url_for('prospects.list_prospects') }}"><i class="bi bi-arrow-left"></i> Volver</a>
+</div>
+
+<form method="post" class="card p-4">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input class="form-control" name="nombre" value="{{ p.nombre if p else '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Plataforma</label>
+      <select class="form-select" name="plataforma">
+        {% set plataforma = p.plataforma if p else 'instagram' %}
+        {% for opt in ['instagram', 'linkedin', 'web', 'otro'] %}
+        <option value="{{ opt }}" {% if plataforma == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Tono</label>
+      <select class="form-select" name="tono">
+        {% set tono = p.tono if p else 'cercano' %}
+        {% for opt in ['cercano', 'profesional', 'directo', 'consultivo'] %}
+        <option value="{{ opt }}" {% if tono == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12">
+      <label class="form-label">URL del perfil</label>
+      <input class="form-control" name="perfil_url" value="{{ p.perfil_url if p else '' }}" placeholder="https://...">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Bio o resumen visible</label>
+      <textarea class="form-control" name="bio" rows="6">{{ p.bio if p else '' }}</textarea>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Publicaciones, intereses o señales relevantes</label>
+      <textarea class="form-control" name="publicaciones" rows="6">{{ p.publicaciones if p else '' }}</textarea>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Objetivo del contacto</label>
+      <textarea class="form-control" name="objetivo" rows="4">{{ p.objetivo if p else '' }}</textarea>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Oferta o propuesta</label>
+      <textarea class="form-control" name="oferta" rows="4">{{ p.oferta if p else '' }}</textarea>
+    </div>
+    {% if p %}
+    <div class="col-md-4">
+      <label class="form-label">Estado</label>
+      <select class="form-select" name="estado">
+        {% for opt in ['nuevo', 'analizado', 'mensaje_generado', 'contactado', 'respondio', 'agendo', 'convertido', 'descartado'] %}
+        <option value="{{ opt }}" {% if p.estado == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+  </div>
+  <div class="mt-3 d-flex gap-2">
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('prospects.list_prospects') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

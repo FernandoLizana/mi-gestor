@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Onboarding{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css') }}">{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<h2 class="h4 mb-3">Onboarding de clientes</h2>
+<div class="table-responsive">
+  <table class="table table-sm">
+    <thead><tr><th>Cliente</th><th>Producto</th><th>Progreso</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      {% for o in onboardings %}
+      <tr>
+        <td>{{ o.cliente.empresa or o.cliente.nombre if o.cliente else '—' }}</td>
+        <td>{{ o.producto }}</td>
+        <td>{{ o.items|selectattr('estado', 'equalto', 'listo')|list|length }}/{{ o.items|length }}</td>
+        <td>{{ o.estado }}</td>
+        <td><a href="{{ url_for('commercial.onboarding_detail', oid=o.id) }}" class="btn btn-sm btn-outline-primary">Ver checklist</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-muted">Sin onboardings — se crean al cerrar una venta pagada</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

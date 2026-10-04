@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Estudio creativo{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('publicidad.index') }}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Publicidad</a>
+  <h2 class="h4 mb-1 mt-1"><i class="bi bi-palette"></i> Estudio creativo</h2>
+  <p class="text-muted mb-0">Crea publicaciones con variedad usando tus propias fotos: cómics, memes, tips y más.</p>
+</div>
+
+{% if not ai_configured %}
+<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Necesitas <code>OPENROUTER_API_KEY</code> para generar copy e imágenes.</div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <form method="post" class="card p-3">
+      <div class="mb-3">
+        <label class="form-label">Estilo creativo</label>
+        <select class="form-select" name="estilo" id="selEstilo">
+          {% for key, s in estilos.items() %}
+          <option value="{{ key }}">{{ s.label }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text" id="estiloDesc">{{ estilos.comic.desc }}</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Tema o idea</label>
+        <input class="form-control" name="tema" placeholder="Ej: señales del universo cuando piensas en alguien">
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label small">Plataforma</label>
+          <select class="form-select" name="plataforma">
+            {% for pl in ['instagram','tiktok','facebook'] %}
+            <option value="{{ pl }}">{{ pl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small">Variaciones</label>
+          <select class="form-select" name="cantidad">
+            {% for n in [1,2,3,5] %}
+            <option value="{{ n }}">{{ n }} publicación{% if n>1 %}es{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small">Tono</label>
+        <select class="form-select" name="tono">
+          {% for t in ['cercano','místico','divertido','elegante'] %}
+          <option value="{{ t }}">{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Tus fotos <span class="text-danger">*</span></label>
+        {% if referencias %}
+        <div class="row g-2">
+          {% for r in referencias %}
+          <div class="col-4">
+            <label class="estudio-photo-pick">
+              <input type="checkbox" name="referencias" value="{{ r.name }}">
+              <img src="{{ crm_root }}/uploads/{{ r.rel_path }}" alt="{{ r.name }}">
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="form-text mt-2">
+          Sin fotos? <a href="{{ url_for('social.referencias') }}">Sube fotos tuyas aquí</a> primero.
+        </div>
+        {% else %}
+        <div class="alert alert-info small mb-0">
+          Primero sube fotos en <a href="{{ url_for('social.referencias') }}">Mis fotos</a> para usar el estudio.
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="generar_imagen" id="genImg" checked>
+        <label class="form-check-label" for="genImg">Generar imagen con IA (usa tus fotos como referencia)</label>
+      </div>
+
+      <button class="btn btn-primary w-100" {% if not ai_configured or not referencias %}disabled{% endif %}>
+        <i class="bi bi-stars"></i> Crear publicación creativa
+      </button>
+    </form>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card p-3 h-100">
+      <h3 class="h6 text-muted mb-3">Estilos disponibles</h3>
+      <div class="row g-2">
+        {% for key, s in estilos.items() %}
+        <div class="col-md-6">
+          <div class="border rounded p-3 h-100">
+            <strong>{{ s.label }}</strong>
+            <p class="small text-muted mb-0">{{ s.desc }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <hr>
+      <p class="small text-muted mb-0">
+        <strong>Tip:</strong> Para cómics y memes, elige fotos expresivas o de tu mesa de tarot.
+        Las publicaciones quedan en <a href="{{ url_for('social.index') }}">Redes</a> como borradores listas para publicar.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const descs = {{ estilos|tojson }};
+document.getElementById('selEstilo')?.addEventListener('change', function() {
+  const d = descs[this.value];
+  document.getElementById('estiloDesc').textContent = d ? d.desc : '';
+});
+</script>
+{% endblock %}

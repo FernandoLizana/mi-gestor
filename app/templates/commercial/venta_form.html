@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Registrar venta{% endblock %}
+{% block content %}
+<h2 class="h5 mb-3">Venta desde propuesta #{{ propuesta.id }}</h2>
+<form method="post" enctype="multipart/form-data" class="card p-4">
+  <div class="row g-3">
+    <div class="col-md-4"><label class="form-label">Setup cobrado</label><input name="setup_cobrado" type="number" class="form-control" value="{{ propuesta.setup or 0 }}"></div>
+    <div class="col-md-4"><label class="form-label">Mensualidad cobrada</label><input name="mensualidad_cobrada" type="number" class="form-control" value="{{ propuesta.mensualidad or 0 }}"></div>
+    <div class="col-md-4"><label class="form-label">Total primer pago</label><input name="monto_total_primer_pago" type="number" class="form-control" value="{{ (propuesta.setup or 0) + (propuesta.mensualidad or 0) }}"></div>
+    <div class="col-md-4"><label class="form-label">Fecha cierre</label><input name="fecha_cierre" type="date" class="form-control" required></div>
+    <div class="col-md-4"><label class="form-label">Fecha pago</label><input name="fecha_pago" type="date" class="form-control"></div>
+    <div class="col-md-4">
+      <label class="form-label">Estado pago</label>
+      <select name="estado_pago" class="form-select">
+        <option value="pendiente">Pendiente</option>
+        <option value="pagado">Pagado</option>
+        <option value="parcial">Parcial</option>
+        <option value="atrasado">Atrasado</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Método pago</label>
+      <select name="metodo_pago" class="form-select">
+        <option value="transferencia">Transferencia</option>
+        <option value="efectivo">Efectivo</option>
+        <option value="webpay">Webpay</option>
+        <option value="mercado_pago">Mercado Pago</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+    <div class="col-md-4"><label class="form-label">Comprobante</label><input name="comprobante" type="file" class="form-control" accept=".pdf,.jpg,.png"></div>
+    <div class="col-12"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+  </div>
+  <p class="small text-muted mt-2">Al marcar pago como <strong>pagado</strong> se calculan comisiones y se crea onboarding automático.</p>
+  <button class="btn btn-success mt-3">Registrar venta</button>
+</form>
+{% endblock %}

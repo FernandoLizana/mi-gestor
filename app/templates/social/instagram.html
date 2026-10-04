@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Métricas Instagram{% endblock %}
+{% block content %}
+<div class="social-platform-header social-platform-header--instagram mb-4">
+  <div>
+    <h2 class="h4 mb-1"><i class="bi bi-instagram"></i> Instagram</h2>
+    <p class="text-muted mb-0">Registra métricas del perfil y revisa el rendimiento de tus publicaciones.</p>
+  </div>
+  <a href="{{ url_for('social.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Redes</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="social-stat-card social-stat-card--instagram">
+      <span class="social-stat-label">Último registro</span>
+      <strong class="social-stat-value">{{ metricas[0].seguidores if metricas else '—' }}</strong>
+      <span class="social-stat-hint">seguidores</span>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="social-stat-card">
+      <span class="social-stat-label">Alcance reciente</span>
+      <strong class="social-stat-value">{{ metricas[0].alcance if metricas else '—' }}</strong>
+      <span class="social-stat-hint">cuentas alcanzadas</span>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="social-stat-card">
+      <span class="social-stat-label">Posts en CRM</span>
+      <strong class="social-stat-value">{{ pubs_ig|length }}</strong>
+      <span class="social-stat-hint">publicados recientes</span>
+    </div>
+  </div>
+</div>
+
+<form method="post" class="card p-3 mb-3">
+  <h3 class="h6 mb-3">Nuevo registro manual</h3>
+  <div class="row g-2">
+    <div class="col-md-2">
+      <label class="form-label small">Fecha</label>
+      <input type="date" class="form-control" name="fecha" value="{{ hoy }}">
+    </div>
+    <div class="col-md-2"><label class="form-label small">Seguidores</label><input type="number" class="form-control" name="seguidores" min="0"></div>
+    <div class="col-md-2"><label class="form-label small">Alcance</label><input type="number" class="form-control" name="alcance" min="0"></div>
+    <div class="col-md-2"><label class="form-label small">Impresiones</label><input type="number" class="form-control" name="impresiones" min="0"></div>
+    <div class="col-md-1"><label class="form-label small">Likes</label><input type="number" class="form-control" name="likes" min="0"></div>
+    <div class="col-md-1"><label class="form-label small">Coment.</label><input type="number" class="form-control" name="comentarios" min="0"></div>
+    <div class="col-md-1"><label class="form-label small">Guard.</label><input type="number" class="form-control" name="guardados" min="0"></div>
+    <div class="col-md-1 d-grid align-items-end"><button class="btn btn-primary">Guardar</button></div>
+  </div>
+  <div class="mt-2"><input class="form-control" name="notas" placeholder="Notas (opcional)"></div>
+</form>
+
+<div class="card p-3 mb-3"><canvas id="chartIg" height="80"></canvas></div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header bg-transparent"><strong>Historial de métricas</strong></div>
+      <div class="card-body p-0 table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead><tr><th>Fecha</th><th>Seg.</th><th>Alcance</th><th>Impres.</th><th>Likes</th><th>Coment.</th><th>Guard.</th><th></th></tr></thead>
+          <tbody>
+          {% for m in metricas %}
+          <tr>
+            <td>{{ m.fecha.strftime('%d-%m-%Y') }}</td>
+            <td>{{ m.seguidores }}</td><td>{{ m.alcance }}</td><td>{{ m.impresiones }}</td>
+            <td>{{ m.likes }}</td><td>{{ m.comentarios }}</td><td>{{ m.guardados }}</td>
+            <td><form method="post" action="{{ url_for('social.delete_instagram', mid=m.id) }}"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td>
+          </tr>
+          {% else %}<tr><td colspan="8" class="text-muted text-center p-3">Sin métricas aún. Registra la primera arriba.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header bg-transparent"><strong>Posts publicados (CRM)</strong></div>
+      <div class="list-group list-group-flush">
+        {% for p in pubs_ig %}
+        <a href="{{ url_for('social.edit_post', pid=p.id) }}" class="list-group-item list-group-item-action d-flex gap-2 align-items-center">
+          {% if p.imagen_path %}<img src="{{ crm_root }}/uploads/{{ p.imagen_path }}" alt="" class="rounded" style="width:44px;height:44px;object-fit:cover">{% endif %}
+          <div class="min-w-0">
+            <div class="fw-semibold text-truncate">{{ p.titulo or '(sin título)' }}</div>
+            <div class="small text-muted">{{ p.likes or 0 }} likes · {{ p.vistas or 0 }} vistas</div>
+          </div>
+        </a>
+        {% else %}
+        <div class="list-group-item text-muted small">Aún no hay posts de Instagram marcados como publicados.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const data = {{ serie|tojson }};
+if (data.length) {
+  new Chart(document.getElementById("chartIg"), {
+    type: "line",
+    data: {
+      labels: data.map(d => d.fecha),
+      datasets: [
+        {label: "Seguidores", data: data.map(d => d.seguidores), borderColor: "#E1306C", tension: .3},
+        {label: "Alcance", data: data.map(d => d.alcance), borderColor: "#F77737", tension: .3},
+        {label: "Likes", data: data.map(d => d.likes), borderColor: "#833AB4", tension: .3},
+      ]
+    },
+    options: { plugins: { legend: { position: "bottom" } } }
+  });
+}
+</script>
+{% endblock %}

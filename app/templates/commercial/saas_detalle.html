@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Cuenta SaaS — {{ cuenta.nombre_negocio }}{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<h2>{{ cuenta.nombre_negocio }}</h2>
+<p class="text-muted">{{ cuenta.portal_label }} · {{ cuenta.email }}</p>
+
+<div class="card p-4 mb-3">
+  <h6>Acceso del cliente</h6>
+  <p class="mb-2"><strong>URL:</strong> <a href="{{ acceso_url }}" target="_blank" rel="noopener">{{ acceso_url }}</a></p>
+  <p class="mb-0"><strong>Usuario:</strong> {{ cuenta.email }}</p>
+  <p class="small text-muted mt-2">La contraseña se envió por correo al crear la cuenta (o se mostró una sola vez en pantalla).</p>
+</div>
+
+<ul class="list-unstyled">
+  <li><strong>Plan:</strong> {{ cuenta.plan or '—' }}</li>
+  <li><strong>Estado:</strong> {{ cuenta.estado }}</li>
+  <li><strong>Cliente CRM:</strong> <a href="{{ url_for('clients.detail', cid=cuenta.cliente_id) }}">Ver ficha</a></li>
+  <li><strong>Creado:</strong> {{ cuenta.creado.strftime('%d/%m/%Y %H:%M') if cuenta.creado else '—' }}</li>
+  {% if cuenta.ultimo_acceso %}<li><strong>Último acceso:</strong> {{ cuenta.ultimo_acceso.strftime('%d/%m/%Y %H:%M') }}</li>{% endif %}
+</ul>
+
+{% if cuenta.notas %}<div class="card p-3"><pre class="mb-0 small">{{ cuenta.notas }}</pre></div>{% endif %}
+
+<div class="card p-4 mt-4">
+  <h6 class="mb-3">Herramientas de valor agregado
+    {% if alertas_count %}<span class="badge bg-warning text-dark">{{ alertas_count }} alerta(s)</span>{% endif %}
+  </h6>
+  {% if registros %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Título</th><th>Herramienta</th><th>Estado</th><th>Fecha clave</th><th>Actualizado</th></tr></thead>
+      <tbody>
+        {% for r in registros %}
+        <tr>
+          <td>{{ r.titulo }}</td>
+          <td><code class="small">{{ r.tool_slug }}</code></td>
+          <td>
+            <span class="badge bg-{% if r.estado == 'alerta' %}danger{% elif r.estado == 'campana_pendiente' %}warning text-dark{% else %}secondary{% endif %}">
+              {{ r.estado }}
+            </span>
+          </td>
+          <td>{{ r.fecha_evento.strftime('%d/%m/%Y') if r.fecha_evento else '—' }}</td>
+          <td class="small text-muted">{{ r.actualizado.strftime('%d/%m/%Y %H:%M') if r.actualizado else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="small text-muted mt-2 mb-0">El cliente guarda desde su sesión en <a href="{{ acceso_url }}" target="_blank" rel="noopener">/acceso</a> → Herramientas → Guardar.</p>
+  {% else %}
+  <p class="text-muted mb-0 small">Aún no hay registros guardados desde el portal.</p>
+  {% endif %}
+</div>
+
+<a href="{{ url_for('commercial.saas_list') }}" class="btn btn-outline-secondary mt-3">Volver al listado</a>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Onboarding {{ onboarding.cliente.empresa if onboarding.cliente else '' }}{% endblock %}
+{% block content %}
+<h2 class="h5 mb-3">Checklist — {{ onboarding.producto }}</h2>
+<p class="text-muted">{{ onboarding.cliente.empresa or onboarding.cliente.nombre if onboarding.cliente else '' }}</p>
+<ul class="list-group mb-3">
+  {% for item in onboarding.items|sort(attribute='orden') %}
+  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <strong>{{ item.titulo }}</strong>
+      {% if item.notas %}<div class="small text-muted">{{ item.notas }}</div>{% endif %}
+    </div>
+    <form method="post" action="{{ url_for('commercial.onboarding_toggle', iid=item.id) }}" class="d-flex gap-2 align-items-center">
+      <select name="estado" class="form-select form-select-sm" style="width:auto">
+        <option value="pendiente" {% if item.estado=='pendiente' %}selected{% endif %}>Pendiente</option>
+        <option value="en proceso" {% if item.estado in ('en proceso','en_proceso') %}selected{% endif %}>En proceso</option>
+        <option value="listo" {% if item.estado=='listo' %}selected{% endif %}>Listo</option>
+      </select>
+      <button class="btn btn-sm btn-outline-primary">OK</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+<a href="{{ url_for('commercial.onboarding_list') }}" class="btn btn-outline-secondary">Volver</a>
+{% endblock %}

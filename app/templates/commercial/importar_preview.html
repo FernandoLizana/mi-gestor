@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Vista previa importación{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css') }}">{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<h2 class="h4 mb-3">Vista previa de importación</h2>
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Filas leídas</div><div class="h4">{{ meta.rows|length }}</div></div></div>
+  <div class="col-md-3"><div class="card p-3 border-success"><div class="text-muted small">Válidas</div><div class="h4 text-success">{{ validation.valid|length }}</div></div></div>
+  <div class="col-md-3"><div class="card p-3 border-warning"><div class="text-muted small">Duplicados</div><div class="h4 text-warning">{{ validation.duplicates|length }}</div></div></div>
+  <div class="col-md-3"><div class="card p-3 border-danger"><div class="text-muted small">Errores</div><div class="h4 text-danger">{{ validation.errors|length }}</div></div></div>
+</div>
+{% if validation.errors %}
+<a href="{{ url_for('commercial.importar_errores_csv', preview_id=preview_id) }}" class="btn btn-sm btn-outline-danger mb-3">Descargar errores CSV</a>
+{% endif %}
+<form method="post" action="{{ url_for('commercial.importar_ejecutar') }}" class="card p-4 mb-4">
+  <input type="hidden" name="preview_id" value="{{ preview_id }}">
+  <label class="form-label">Si hay duplicados:</label>
+  <select name="duplicate_policy" class="form-select mb-3" style="max-width:280px">
+    <option value="skip">Omitir duplicados</option>
+    <option value="update">Actualizar existentes</option>
+    <option value="create">Crear igualmente</option>
+  </select>
+  <button class="btn btn-success btn-lg" {% if not validation.valid and not validation.duplicates %}disabled{% endif %}>
+    <i class="bi bi-check-circle"></i> Importar {{ validation.valid|length }} + procesar duplicados
+  </button>
+</form>
+<div class="table-responsive">
+  <table class="table table-sm">
+    <thead><tr><th>Línea</th><th>Negocio</th><th>Producto</th><th>Comuna</th><th>Estado</th></tr></thead>
+    <tbody>
+      {% for v in validation.valid[:50] %}
+      <tr><td>{{ v.line }}</td><td>{{ v.fields.nombre }}</td><td>{{ v.fields.producto_interes or '—' }}</td><td>{{ v.fields.comuna or '—' }}</td><td><span class="badge text-bg-success">Nuevo</span></td></tr>
+      {% endfor %}
+      {% for d in validation.duplicates[:30] %}
+      <tr><td>{{ d.line }}</td><td>{{ d.fields.nombre }}</td><td>{{ d.fields.producto_interes or '—' }}</td><td>{{ d.fields.comuna or '—' }}</td><td><span class="badge text-bg-warning">Duplicado #{{ d.duplicate.id }}</span></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

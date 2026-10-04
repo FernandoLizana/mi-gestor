@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Mensaje para {{ cliente.empresa or cliente.nombre }}{% endblock %}
+{% block content %}
+<h2 class="h5 mb-3">Generar mensaje — {{ cliente.empresa or cliente.nombre }}</h2>
+<form method="get" class="row g-2 mb-3">
+  <div class="col-md-6">
+    <select name="plantilla_id" class="form-select" onchange="this.form.submit()">
+      {% for p in plantillas %}
+      <option value="{{ p.id }}" {% if plantilla and plantilla.id==p.id %}selected{% endif %}>{{ p.producto }} · {{ p.etapa }} · {{ p.canal }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+{% if mensaje %}
+<div class="card p-3 mb-3">
+  <pre id="msgText" class="mb-0" style="white-space:pre-wrap;font-family:inherit">{{ mensaje }}</pre>
+</div>
+<button type="button" class="btn btn-primary" id="btnCopy"><i class="bi bi-clipboard"></i> Copiar</button>
+{% if wa_url %}
+<a href="{{ wa_url }}" target="_blank" class="btn btn-success"><i class="bi bi-whatsapp"></i> Abrir WhatsApp</a>
+{% endif %}
+{% endif %}
+<a href="{{ url_for('clients.detail', cid=cliente.id) }}" class="btn btn-outline-secondary">Volver a ficha</a>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('btnCopy')?.addEventListener('click', function() {
+  const t = document.getElementById('msgText').innerText;
+  navigator.clipboard.writeText(t).then(() => alert('Copiado al portapapeles'));
+});
+</script>
+{% endblock %}

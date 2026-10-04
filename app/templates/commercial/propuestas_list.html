@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Propuestas{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css') }}">{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<div class="d-flex justify-content-between mb-3">
+  <h2 class="h4 mb-0">Propuestas comerciales</h2>
+</div>
+<div class="table-responsive">
+  <table class="table table-sm">
+    <thead><tr><th>Cliente</th><th>Producto</th><th>Plan</th><th>Setup</th><th>Mensual</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      {% for p in propuestas %}
+      <tr>
+        <td>{{ p.cliente.empresa or p.cliente.nombre if p.cliente else '—' }}</td>
+        <td>{{ p.producto }}</td>
+        <td>{{ p.plan }}</td>
+        <td>${{ '{:,.0f}'.format(p.setup or 0) }}</td>
+        <td>${{ '{:,.0f}'.format(p.mensualidad or 0) }}</td>
+        <td><span class="badge text-bg-secondary">{{ p.estado }}</span></td>
+        <td>
+          <a href="{{ url_for('commercial.propuesta_pdf', pid=p.id) }}" class="btn btn-sm btn-outline-primary">PDF</a>
+          {% if p.estado == 'aceptada' %}
+          <a href="{{ url_for('commercial.venta_desde_propuesta', pid=p.id) }}" class="btn btn-sm btn-success">→ Venta</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted">Sin propuestas aún</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Cuentas SaaS{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Cuentas SaaS (clientes activos)</h2>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('commercial.saas_rapido') }}" class="btn btn-success btn-sm"><i class="bi bi-person-plus-fill"></i> Crear usuario</a>
+    <a href="{{ url_for('commercial.saas_nuevo') }}" class="btn btn-outline-primary btn-sm">Formulario avanzado</a>
+  </div>
+</div>
+
+<div class="mb-3 d-flex flex-wrap gap-2">
+  <a class="btn btn-sm {{ 'btn-dark' if not portal_filter else 'btn-outline-secondary' }}" href="{{ url_for('commercial.saas_list') }}">Todos</a>
+  {% for slug in portales %}
+  <a class="btn btn-sm {{ 'btn-dark' if portal_filter == slug else 'btn-outline-secondary' }}" href="{{ url_for('commercial.saas_list', portal=slug) }}">{{ labels[slug] }}</a>
+  {% endfor %}
+</div>
+
+<div class="card"><div class="table-responsive">
+<table class="table table-hover mb-0">
+  <thead><tr><th>Negocio</th><th>Portal</th><th>Email login</th><th>Plan</th><th>Cliente CRM</th><th>Creado</th><th></th></tr></thead>
+  <tbody>
+  {% for c in cuentas %}
+  <tr>
+    <td>{{ c.nombre_negocio }}</td>
+    <td>{{ labels.get(c.portal_slug, c.portal_slug) }}</td>
+    <td>{{ c.email }}</td>
+    <td>{{ c.plan or '—' }}</td>
+    <td><a href="{{ url_for('clients.detail', cid=c.cliente_id) }}">{{ c.cliente.empresa or c.cliente.nombre }}</a></td>
+    <td class="small">{{ c.creado.strftime('%d/%m/%Y') if c.creado else '' }}</td>
+    <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('commercial.saas_detalle', sid=c.id) }}">Ver</a></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="7" class="text-muted text-center p-4">Sin cuentas SaaS. Crea una cuando el cliente pague.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div></div>
+{% endblock %}

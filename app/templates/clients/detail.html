@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}{{ c.nombre }}{% endblock %}
+{% block content %}
+{% set wa_num = (c.whatsapp or c.telefono or '')|replace(' ','')|replace('+','')|replace('-','')|replace('(','')|replace(')','') %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <h2>{{ c.empresa or c.nombre }} <small class="text-muted">{{ c.nombre_contacto or c.nombre }}</small></h2>
+  <div class="d-flex flex-wrap gap-1">
+    <a href="{{ url_for('commercial.pipeline') }}" class="btn btn-outline-dark btn-sm"><i class="bi bi-kanban"></i> Pipeline</a>
+    <a href="{{ url_for('commercial.mensaje_generar', cid=c.id) }}" class="btn btn-success btn-sm"><i class="bi bi-chat-quote"></i> Generar mensaje</a>
+    <a href="{{ url_for('commercial.propuesta_form', cid=c.id) }}" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-text"></i> Propuesta</a>
+    <form method="post" action="{{ url_for('commercial.cliente_enriquecer', cid=c.id) }}" class="d-inline">
+      <button class="btn btn-outline-info btn-sm" type="submit"><i class="bi bi-stars"></i> Enriquecer IA</button>
+    </form>
+    {% if wa_num %}
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#mWA"><i class="bi bi-whatsapp"></i> WhatsApp</button>
+    {% endif %}
+    {% if c.email %}
+    <a class="btn btn-outline-primary" href="mailto:{{c.email}}"><i class="bi bi-envelope"></i></a>
+    {% endif %}
+    {% if c.sitio_web %}
+    <a class="btn btn-outline-secondary btn-sm" href="{{ c.sitio_web if c.sitio_web.startswith('http') else 'https://' + c.sitio_web }}" target="_blank" rel="noopener">
+      <i class="bi bi-link-45deg"></i> Perfil
+    </a>
+    {% endif %}
+    <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#qmInteraccion"
+      data-prefill='{"cliente_id":"{{c.id}}"}'>
+      <i class="bi bi-chat-text"></i> Interacción
+    </button>
+    <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#qmProyecto"
+      data-prefill='{"cliente_id":"{{c.id}}"}'>
+      <i class="bi bi-kanban"></i> Crear proyecto
+    </button>
+    <a href="{{ url_for('clients.edit_client', cid=c.id) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i> Editar</a>
+    <a href="{{ url_for('commercial.saas_rapido', cid=c.id) }}" class="btn btn-success btn-sm"><i class="bi bi-person-plus-fill"></i> Usuario portal</a>
+    <a href="{{ url_for('commercial.saas_nuevo', cid=c.id) }}" class="btn btn-outline-success btn-sm"><i class="bi bi-box-arrow-in-right"></i> Activar SaaS</a>
+  </div>
+</div>
+
+{% if wa_num %}
+<div class="modal fade" id="mWA" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-whatsapp text-success"></i> Enviar WhatsApp a {{ c.nombre }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <label class="form-label">Mensaje (puedes editarlo)</label>
+        <textarea id="waMsg" class="form-control" rows="5">Hola {{ c.nombre.split(' ')[0] }}, ¿cómo estás? Te escribo para...</textarea>
+        <div class="form-text">Se abrirá WhatsApp Web/desktop con el mensaje listo. Después podrás registrar la interacción aquí.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button>
+        <a href="#" id="waSend" class="btn btn-success" target="_blank"><i class="bi bi-whatsapp"></i> Abrir WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById("waSend").addEventListener("click", function(e){
+  const msg = encodeURIComponent(document.getElementById("waMsg").value);
+  this.href = "https://wa.me/{{ wa_num }}?text=" + msg;
+});
+</script>
+{% endif %}
+<div class="row mt-3">
+  <div class="col-md-5">
+    <div class="card p-3">
+      <h6>Datos de contacto</h6>
+      <ul class="list-unstyled mb-0">
+        {% if c.sitio_web %}
+        <li><i class="bi bi-link-45deg"></i>
+          <a href="{{ c.sitio_web if c.sitio_web.startswith('http') else 'https://' + c.sitio_web }}" target="_blank" rel="noopener">{{ c.sitio_web }}</a>
+        </li>
+        {% endif %}
+        {% if c.email %}<li><i class="bi bi-envelope"></i> {{ c.email }}</li>{% endif %}
+        {% if c.telefono %}<li><i class="bi bi-telephone"></i> {{ c.telefono }}</li>{% endif %}
+        {% if c.whatsapp and c.whatsapp != c.telefono %}<li><i class="bi bi-whatsapp text-success"></i> {{ c.whatsapp }}</li>{% endif %}
+        {% if c.rut %}<li><i class="bi bi-card-text"></i> {{ c.rut }}</li>{% endif %}
+        {% if c.direccion %}<li><i class="bi bi-geo-alt"></i> {{ c.direccion }}</li>{% endif %}
+        {% if c.region or c.ciudad %}<li><i class="bi bi-globe-americas"></i> {{ [c.comuna, c.ciudad, c.region]|select|join(', ') }}</li>{% endif %}
+        {% if c.instagram %}<li><i class="bi bi-instagram platform-instagram"></i> {{ c.instagram }}</li>{% endif %}
+        {% if c.tiktok %}<li><i class="bi bi-tiktok"></i> {{ c.tiktok }}</li>{% endif %}
+        {% if c.linkedin %}<li><i class="bi bi-linkedin platform-linkedin"></i> <a href="{{c.linkedin}}" target="_blank">LinkedIn</a></li>{% endif %}
+        {% if c.facebook %}<li><i class="bi bi-facebook platform-facebook"></i> <a href="{{c.facebook}}" target="_blank">Facebook</a></li>{% endif %}
+      </ul>
+      <hr>
+      <div><strong>Pipeline:</strong> <span class="badge bg-primary">{{ c.estado_pipeline or 'Nuevo' }}</span></div>
+      {% if c.producto_interes %}<div><strong>Producto:</strong> {{ c.producto_interes }}</div>{% endif %}
+      {% if c.prioridad %}<div><strong>Prioridad:</strong> {{ c.prioridad }}</div>{% endif %}
+      {% if c.comuna %}<div><strong>Comuna:</strong> {{ c.comuna }}</div>{% endif %}
+      {% if c.proxima_accion %}<div><strong>Próxima acción:</strong> {{ c.proxima_accion }}{% if c.fecha_proximo_seguimiento %} ({{ c.fecha_proximo_seguimiento.strftime('%d/%m') }}){% endif %}</div>{% endif %}
+      <div><strong>Estado:</strong> <span class="badge bg-secondary">{{ c.estado }}</span></div>
+      {% if c.fuente %}<div><strong>Fuente:</strong> {{ c.fuente }}</div>{% endif %}
+      {% if c.saas_cuentas %}
+      <hr>
+      <h6>Cuentas SaaS</h6>
+      <ul class="small mb-0">
+        {% for sc in c.saas_cuentas if sc.activo %}
+        <li>
+          <a href="{{ url_for('commercial.saas_detalle', sid=sc.id) }}">{{ sc.portal_label }}</a>
+          — {{ sc.email }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% if c.notas %}<hr><div class="text-muted small">{{ c.notas }}</div>{% endif %}
+    </div>
+
+    {% if c.proyectos %}
+    <div class="card p-3 mt-3">
+      <h6>Proyectos</h6>
+      <ul class="mb-0">
+        {% for p in c.proyectos %}
+        <li><a href="{{ url_for('projects.detail', pid=p.id) }}">{{ p.nombre }}</a> <span class="badge bg-info">{{ p.estado }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-7">
+    <h5>Registrar interacción / seguimiento</h5>
+    <form method="post" action="{{ url_for('clients.add_interaction', cid=c.id) }}" class="card p-3 mb-3">
+      <div class="row g-2">
+        <div class="col-md-4"><select class="form-select" name="canal">
+          {% for ch in ['email','whatsapp','instagram','linkedin','llamada','reunión','otro'] %}
+          <option>{{ ch }}</option>{% endfor %}
+        </select></div>
+        <div class="col-md-8"><input class="form-control" name="resumen" placeholder="Resumen de la interacción" required></div>
+        <div class="col-md-7"><input class="form-control" name="proxima_accion" placeholder="Próxima acción"></div>
+        <div class="col-md-3"><input type="date" class="form-control" name="proxima_fecha"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-primary">Guardar</button></div>
+      </div>
+    </form>
+
+    <h5>Historial</h5>
+    <div class="card"><div class="card-body p-0">
+    <table class="table mb-0">
+      <thead><tr><th>Fecha</th><th>Canal</th><th>Resumen</th><th>Próxima acción</th><th></th></tr></thead>
+      <tbody>
+      {% for i in interacciones %}
+      <tr>
+        <td>{{ i.fecha.strftime('%d-%m-%Y %H:%M') }}</td>
+        <td>{{ i.canal or '—' }}</td>
+        <td>{{ i.resumen }}</td>
+        <td>{{ i.proxima_accion or '' }}{% if i.proxima_fecha %}<br><span class="badge bg-warning text-dark">{{ i.proxima_fecha.strftime('%d-%m') }}</span>{% endif %}</td>
+        <td><form method="post" action="{{ url_for('clients.delete_interaction', iid=i.id) }}"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td>
+      </tr>
+      {% else %}<tr><td colspan="5" class="text-muted text-center p-3">Sin registros aún.</td></tr>{% endfor %}
+      </tbody></table>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

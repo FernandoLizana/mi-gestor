@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Materiales de campaña{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <a href="{{ url_for('publicidad.index') }}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Publicidad</a>
+    <h2 class="h4 mb-1 mt-1"><i class="bi bi-folder2-open"></i> Materiales de campaña</h2>
+    <p class="text-muted mb-0">PDFs, papers o imágenes que alimentan las publicaciones con IA.</p>
+  </div>
+</div>
+
+<div class="card p-3 mb-4">
+  <h3 class="h6 mb-3">Subir material nuevo</h3>
+  <form method="post" action="{{ url_for('publicidad.upload_material') }}" enctype="multipart/form-data">
+    <div class="row g-2">
+      <div class="col-md-4">
+        <input class="form-control" name="titulo" placeholder="Título (opcional)">
+      </div>
+      <div class="col-md-5">
+        <input class="form-control" type="file" name="archivo" accept=".pdf,.jpg,.jpeg,.png" required>
+        <div class="form-text">PDF, JPG o PNG. Máx. recomendado ~15 MB.</div>
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-primary w-100"><i class="bi bi-upload"></i> Subir</button>
+      </div>
+      <div class="col-12">
+        <textarea class="form-control" name="notas" rows="2" placeholder="Notas opcionales: de qué trata, público objetivo, ideas clave…"></textarea>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="row g-3">
+  {% for m in materiales %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="badge text-bg-secondary text-uppercase">{{ m.tipo_archivo }}</span>
+          <span class="small text-muted">{{ m.creado.strftime('%d/%m/%Y') }}</span>
+        </div>
+        <h4 class="h6">{{ m.titulo }}</h4>
+        <p class="small text-muted mb-2">{{ (m.texto_extraido or m.notas or 'Sin texto extraído')[:120] }}…</p>
+        <div class="small text-muted mb-3">{{ m.publicaciones_generadas or 0 }} publicaciones generadas</div>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('publicidad.material_detail', mid=m.id) }}" class="btn btn-sm btn-primary">Generar posts</a>
+          {% if m.tipo_archivo == 'imagen' %}
+          <a href="{{ crm_root }}/uploads/{{ m.archivo_path }}" target="_blank" class="btn btn-sm btn-outline-secondary">Ver</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-0 pt-0">
+        <form method="post" action="{{ url_for('publicidad.delete_material', mid=m.id) }}" onsubmit="return confirm('¿Eliminar material?')">
+          <button class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-trash"></i> Eliminar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="empty-state text-center py-5 text-muted">
+      <i class="bi bi-file-earmark-arrow-up d-block mb-2" style="font-size:2rem;"></i>
+      <p class="mb-0">Aún no hay materiales. Sube un PDF o imagen arriba.</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

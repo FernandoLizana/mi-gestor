@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ material.titulo }}{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('publicidad.list_materiales') }}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Materiales</a>
+  <h2 class="h4 mb-1 mt-1">{{ material.titulo }}</h2>
+  <p class="text-muted mb-0 text-uppercase small">{{ material.tipo_archivo }} · subido {{ material.creado.strftime('%d/%m/%Y %H:%M') }}</p>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card p-3 mb-3">
+      <h3 class="h6 text-muted mb-2">Contenido detectado</h3>
+      {% if material.tipo_archivo == 'imagen' %}
+      <img src="{{ crm_root }}/uploads/{{ material.archivo_path }}" class="img-fluid rounded mb-3" alt="{{ material.titulo }}">
+      {% endif %}
+      <pre class="small mb-0" style="white-space:pre-wrap;font-family:inherit;max-height:320px;overflow:auto;">{{ material.texto_extraido or '(sin texto — agrega notas al material)' }}</pre>
+      {% if material.notas %}
+      <hr>
+      <p class="small text-muted mb-0"><strong>Notas:</strong> {{ material.notas }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card p-3 border-primary mb-3">
+      <h3 class="h6 mb-3"><i class="bi bi-stars"></i> Generar publicaciones con IA</h3>
+      {% if not ai_configured %}
+      <div class="alert alert-warning small">Configura OPENROUTER_API_KEY para usar esta función.</div>
+      {% endif %}
+      <form method="post" action="{{ url_for('publicidad.generate_from_material', mid=material.id) }}">
+        <div class="row g-2 mb-2">
+          <div class="col-md-4">
+            <label class="form-label small">Plataforma</label>
+            <select class="form-select" name="plataforma">
+              {% for pl in ['instagram','tiktok','facebook','linkedin'] %}
+              <option value="{{ pl }}">{{ pl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Cantidad</label>
+            <select class="form-select" name="cantidad">
+              {% for n in [10,12,15] %}
+              <option value="{{ n }}" {% if n==12 %}selected{% endif %}>{{ n }} publicaciones</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Tono</label>
+            <select class="form-select" name="tono">
+              {% for t in ['cercano','místico','profesional','divertido','inspiracional'] %}
+              <option value="{{ t }}">{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Enfoque extra (opcional)</label>
+            <input class="form-control" name="tema_extra" placeholder="Ej: promocionar lecturas de amor, enfoque en luna nueva…">
+          </div>
+        </div>
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" name="espaciar_calendario" id="espaciar" checked>
+          <label class="form-check-label small" for="espaciar">Espaciar en calendario (1 post por día)</label>
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" name="generar_imagenes" id="genImg">
+          <label class="form-check-label small" for="genImg">Generar imágenes IA para las primeras 5 (más lento)</label>
+        </div>
+        <button class="btn btn-primary w-100" {% if not ai_configured %}disabled{% endif %}>
+          <i class="bi bi-magic"></i> Crear publicaciones
+        </button>
+      </form>
+    </div>
+
+    {% if posts %}
+    <h3 class="h6 section-title">Publicaciones de este material ({{ posts|length }})</h3>
+    <div class="list-group">
+      {% for p in posts %}
+      <a href="{{ url_for('social.edit_post', pid=p.id) }}" class="list-group-item list-group-item-action">
+        <div class="fw-semibold">{{ p.titulo or 'Sin título' }}</div>
+        <div class="small text-muted">{{ p.estado }} · {{ p.plataforma }}</div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+instance/
+data.sqlite
+*.sqlite
+*.db
+backups/
+uploads/
+app/static/img/equipo/
+docs/*.pdf
+.idea/
+.vscode/

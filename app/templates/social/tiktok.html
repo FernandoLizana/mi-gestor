@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Métricas TikTok{% endblock %}
+{% block content %}
+<div class="social-platform-header social-platform-header--tiktok mb-4">
+  <div>
+    <h2 class="h4 mb-1"><i class="bi bi-tiktok"></i> TikTok</h2>
+    <p class="text-muted mb-0">Registra métricas manualmente (TikTok no ofrece API abierta para perfiles personales).</p>
+  </div>
+  <a href="{{ url_for('social.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Redes</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="social-stat-card social-stat-card--tiktok">
+      <span class="social-stat-label">Último registro</span>
+      <strong class="social-stat-value">{{ metricas[0].seguidores if metricas else '—' }}</strong>
+      <span class="social-stat-hint">seguidores</span>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="social-stat-card">
+      <span class="social-stat-label">Vistas videos</span>
+      <strong class="social-stat-value">{{ metricas[0].vistas_videos if metricas else '—' }}</strong>
+      <span class="social-stat-hint">última medición</span>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="social-stat-card">
+      <span class="social-stat-label">Posts en CRM</span>
+      <strong class="social-stat-value">{{ pubs_tt|length }}</strong>
+      <span class="social-stat-hint">publicados recientes</span>
+    </div>
+  </div>
+</div>
+
+<form method="post" class="card p-3 mb-3">
+  <h3 class="h6 mb-3">Nuevo registro manual</h3>
+  <div class="row g-2">
+    <div class="col-md-2">
+      <label class="form-label small">Fecha</label>
+      <input type="date" class="form-control" name="fecha" value="{{ hoy }}">
+    </div>
+    <div class="col-md-2"><label class="form-label small">Seguidores</label><input type="number" class="form-control" name="seguidores" min="0"></div>
+    <div class="col-md-2"><label class="form-label small">Vistas perfil</label><input type="number" class="form-control" name="vistas_perfil" min="0"></div>
+    <div class="col-md-2"><label class="form-label small">Vistas videos</label><input type="number" class="form-control" name="vistas_videos" min="0"></div>
+    <div class="col-md-1"><label class="form-label small">Likes</label><input type="number" class="form-control" name="likes" min="0"></div>
+    <div class="col-md-1"><label class="form-label small">Coment.</label><input type="number" class="form-control" name="comentarios" min="0"></div>
+    <div class="col-md-1"><label class="form-label small">Comp.</label><input type="number" class="form-control" name="compartidos" min="0"></div>
+    <div class="col-md-1 d-grid align-items-end"><button class="btn btn-dark">Guardar</button></div>
+  </div>
+  <div class="mt-2"><input class="form-control" name="notas" placeholder="Notas (opcional)"></div>
+</form>
+
+<div class="card p-3 mb-3"><canvas id="chartTt" height="80"></canvas></div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header bg-transparent"><strong>Historial de métricas</strong></div>
+      <div class="card-body p-0 table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead><tr><th>Fecha</th><th>Seg.</th><th>Vistas videos</th><th>Likes</th><th>Coment.</th><th>Comp.</th><th>Notas</th><th></th></tr></thead>
+          <tbody>
+          {% for m in metricas %}
+          <tr>
+            <td>{{ m.fecha.strftime('%d-%m-%Y') }}</td>
+            <td>{{ m.seguidores }}</td><td>{{ m.vistas_videos }}</td><td>{{ m.likes }}</td>
+            <td>{{ m.comentarios }}</td><td>{{ m.compartidos }}</td>
+            <td class="small">{{ m.notas or '' }}</td>
+            <td><form method="post" action="{{ url_for('social.delete_tiktok', mid=m.id) }}"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td>
+          </tr>
+          {% else %}<tr><td colspan="8" class="text-muted text-center p-3">Sin métricas. Registra la primera arriba.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header bg-transparent"><strong>Posts publicados (CRM)</strong></div>
+      <div class="list-group list-group-flush">
+        {% for p in pubs_tt %}
+        <a href="{{ url_for('social.edit_post', pid=p.id) }}" class="list-group-item list-group-item-action d-flex gap-2 align-items-center">
+          {% if p.imagen_path %}<img src="{{ crm_root }}/uploads/{{ p.imagen_path }}" alt="" class="rounded" style="width:44px;height:44px;object-fit:cover">{% endif %}
+          <div class="min-w-0">
+            <div class="fw-semibold text-truncate">{{ p.titulo or '(sin título)' }}</div>
+            <div class="small text-muted">{{ p.likes or 0 }} likes · {{ p.vistas or 0 }} vistas</div>
+          </div>
+        </a>
+        {% else %}
+        <div class="list-group-item text-muted small">Aún no hay posts de TikTok marcados como publicados.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const data = {{ serie|tojson }};
+if (data.length) {
+  new Chart(document.getElementById("chartTt"), {
+    type: "line",
+    data: {
+      labels: data.map(d => d.fecha),
+      datasets: [
+        {label: "Seguidores", data: data.map(d => d.seguidores), borderColor: "#000", tension: .3},
+        {label: "Vistas videos", data: data.map(d => d.vistas), borderColor: "#25F4EE", tension: .3},
+        {label: "Likes", data: data.map(d => d.likes), borderColor: "#FE2C55", tension: .3},
+      ]
+    },
+    options: { plugins: { legend: { position: "bottom" } } }
+  });
+}
+</script>
+{% endblock %}

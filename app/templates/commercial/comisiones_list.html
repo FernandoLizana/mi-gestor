@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Comisiones{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css') }}">{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h2 class="h4 mb-0">Comisiones</h2>
+  <a href="{{ url_for('commercial.comisiones_config') }}" class="btn btn-sm btn-outline-secondary">Configuración</a>
+</div>
+<div class="row g-2 mb-3">
+  <div class="col-md-3"><div class="card p-3"><div class="small text-muted">Pendientes</div><div class="h5">${{ '{:,.0f}'.format(totales.pendiente or 0) }}</div></div></div>
+  <div class="col-md-3"><div class="card p-3"><div class="small text-muted">Aprobadas</div><div class="h5">${{ '{:,.0f}'.format(totales.aprobada or 0) }}</div></div></div>
+  <div class="col-md-3"><div class="card p-3"><div class="small text-muted">Pagadas (mes)</div><div class="h5">${{ '{:,.0f}'.format(totales.pagada_mes or 0) }}</div></div></div>
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto"><select name="estado" class="form-select form-select-sm"><option value="">Estado</option>{% for e in estados %}<option value="{{ e }}" {% if filtros.get('estado')==e %}selected{% endif %}>{{ e }}</option>{% endfor %}</select></div>
+  <div class="col-auto"><button class="btn btn-sm btn-outline-secondary">Filtrar</button></div>
+</form>
+<div class="table-responsive">
+  <table class="table table-sm">
+    <thead><tr><th>Venta</th><th>Tipo</th><th>%</th><th>Base</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      {% for c in comisiones %}
+      <tr>
+        <td>#{{ c.venta_id }}</td>
+        <td>{{ c.tipo_comision }}</td>
+        <td>{{ c.porcentaje }}%</td>
+        <td>${{ '{:,.0f}'.format(c.base_calculo or 0) }}</td>
+        <td><strong>${{ '{:,.0f}'.format(c.monto_comision or 0) }}</strong></td>
+        <td>{{ c.estado }}</td>
+        <td>
+          {% if c.estado in ('pendiente','aprobada') %}
+          <form method="post" action="{{ url_for('commercial.comision_pagar', comision_id=c.id) }}" class="d-inline">
+            <button class="btn btn-sm btn-success">Marcar pagada</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted">Sin comisiones</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

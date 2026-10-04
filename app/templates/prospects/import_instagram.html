@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Importar Instagram{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="page-title">
+    <span class="icon-bubble"><i class="bi bi-instagram"></i></span>
+    <div>
+      <h1 class="h3 mb-1">Importar perfiles de Instagram</h1>
+      <p class="text-muted mb-0">Pega un perfil por línea: <code>@usuario</code> o URL completa.</p>
+    </div>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ url_for('prospects.list_prospects') }}"><i class="bi bi-arrow-left"></i> Volver</a>
+</div>
+
+<form method="post" class="card p-4">
+  <div class="row g-3">
+    <div class="col-12">
+      <label class="form-label">Listado de perfiles</label>
+      <textarea class="form-control" name="handles" rows="10" placeholder="@tarot.luna&#10;https://instagram.com/astro_maria/&#10;@ritual.de.venus"></textarea>
+      <div class="form-text">Se ignoran duplicados automáticamente.</div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Objetivo del contacto</label>
+      <textarea class="form-control" name="objetivo" rows="3">Conectar con potencial clienta para lectura de tarot</textarea>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Oferta</label>
+      <textarea class="form-control" name="oferta" rows="3">Lectura de tarot personalizada</textarea>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Tono</label>
+      <select class="form-select" name="tono">
+        {% for opt in ['cercano', 'profesional', 'directo', 'consultivo'] %}
+        <option value="{{ opt }}" {% if opt == 'cercano' %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-8 d-flex align-items-end">
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" name="auto_scan" id="auto_scan" checked>
+        <label class="form-check-label" for="auto_scan">
+          Intentar extraer bio y últimas publicaciones públicas automáticamente
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="mt-3 d-flex gap-2">
+    <button class="btn btn-primary" type="submit"><i class="bi bi-upload"></i> Importar perfiles</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('prospects.list_prospects') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% if referencias %}
+<div class="mt-2">
+  <div class="small text-muted mb-1">Fotos de referencia (opcional):</div>
+  <div class="d-flex flex-wrap gap-2 align-items-center">
+    {% for r in referencias %}
+    <label class="border rounded p-1" style="cursor:pointer;">
+      <input type="checkbox" name="referencias" value="{{ r.name }}" class="form-check-input me-1">
+      <img src="{{ crm_root }}/uploads/{{ r.rel_path }}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:4px;">
+    </label>
+    {% endfor %}
+    <label class="small ms-1">
+      <input type="checkbox" name="usar_todas_referencias" class="form-check-input me-1">
+      Usar todas
+    </label>
+  </div>
+</div>
+{% else %}
+<div class="form-text mt-1">
+  Sin fotos de referencia aún.
+  <a href="{{ url_for('social.referencias') }}">Sube fotos tuyas o de tus servicios</a> para que la IA las use como inspiración.
+</div>
+{% endif %}

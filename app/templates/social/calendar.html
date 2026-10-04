@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Calendario editorial{% endblock %}
+{% block head_extra %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<style>
+  #cal { background:#fff; padding:1rem; border-radius:12px; }
+  .fc-event { cursor: grab; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2><i class="bi bi-calendar3"></i> Calendario editorial</h2>
+  <div>
+    <a href="{{ url_for('social.index') }}" class="btn btn-outline-secondary"><i class="bi bi-list"></i> Vista lista</a>
+    <a href="{{ url_for('social.new_post') }}" class="btn btn-primary"><i class="bi bi-plus"></i> Nuevo post</a>
+  </div>
+</div>
+<p class="text-muted small">Arrastra una publicación para reprogramarla. Solo aparecen las que tienen fecha programada.</p>
+<div id="cal"></div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales/es.global.min.js"></script>
+<script>
+const cal = new FullCalendar.Calendar(document.getElementById("cal"), {
+  initialView: "dayGridMonth",
+  locale: "es",
+  height: "auto",
+  editable: true,
+  headerToolbar: {left:"prev,next today", center:"title", right:"dayGridMonth,timeGridWeek,listWeek"},
+  events: "{{ url_for('social.calendar_json') }}",
+  eventClick: function(info) {
+    info.jsEvent.preventDefault();
+    if (info.event.url) window.location = info.event.url;
+  },
+  eventDrop: function(info) {
+    const start = info.event.start.toISOString().slice(0,16);
+    fetch((window.CRM_BASE || "") + "/redes/publicaciones/" + info.event.id + "/reprogramar", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({start: start})
+    }).then(r => { if (!r.ok) info.revert(); });
+  }
+});
+cal.render();
+</script>
+{% endblock %}

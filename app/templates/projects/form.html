@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if proyecto else 'Nuevo' }} proyecto{% endblock %}
+{% block content %}
+<h2>{{ 'Editar' if proyecto else 'Nuevo' }} proyecto</h2>
+<form method="post" class="card p-4 mt-3">
+  <div class="row g-3">
+    <div class="col-md-8"><label class="form-label">Nombre</label>
+      <input class="form-control" name="nombre" required value="{{ proyecto.nombre if proyecto else '' }}"></div>
+    <div class="col-md-4"><label class="form-label">Estado</label>
+      <select class="form-select" name="estado">
+        {% for e in ['planificación','en curso','pausado','completado'] %}
+        <option value="{{e}}" {% if proyecto and proyecto.estado==e %}selected{% endif %}>{{e}}</option>
+        {% endfor %}
+      </select></div>
+    <div class="col-12"><label class="form-label">Descripción</label>
+      <textarea class="form-control" name="descripcion" rows="3">{{ proyecto.descripcion if proyecto else '' }}</textarea></div>
+    <div class="col-md-4"><label class="form-label">Cliente</label>
+      <select class="form-select" name="cliente_id">
+        <option value="">—</option>
+        {% for c in clientes %}
+        <option value="{{c.id}}" {% if proyecto and proyecto.cliente_id==c.id %}selected{% endif %}>{{c.nombre}} {% if c.empresa %}({{c.empresa}}){% endif %}</option>
+        {% endfor %}
+      </select></div>
+    <div class="col-md-3"><label class="form-label">Inicio</label>
+      <input type="date" class="form-control" name="fecha_inicio" value="{{ proyecto.fecha_inicio.isoformat() if proyecto and proyecto.fecha_inicio else '' }}"></div>
+    <div class="col-md-3"><label class="form-label">Fin</label>
+      <input type="date" class="form-control" name="fecha_fin" value="{{ proyecto.fecha_fin.isoformat() if proyecto and proyecto.fecha_fin else '' }}"></div>
+    <div class="col-md-2"><label class="form-label">Presupuesto</label>
+      <input type="number" step="1000" class="form-control" name="presupuesto" value="{{ proyecto.presupuesto if proyecto else 0 }}"></div>
+  </div>
+  <div class="mt-3">
+    <button class="btn btn-primary">Guardar</button>
+    <a href="{{ url_for('projects.list_projects') }}" class="btn btn-link">Cancelar</a>
+    {% if proyecto %}
+    <button formaction="{{ url_for('projects.delete_project', pid=proyecto.id) }}" formmethod="post"
+            class="btn btn-outline-danger float-end" onclick="return confirm('¿Eliminar proyecto?')">Eliminar</button>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}

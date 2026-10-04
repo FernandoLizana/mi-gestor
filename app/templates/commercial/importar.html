@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Importar prospectos{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css') }}">{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<h2 class="h4 mb-3"><i class="bi bi-upload"></i> Importar prospectos CSV</h2>
+{% if producto_default %}
+<div class="alert alert-info">
+  Producto preseleccionado: <strong>{{ producto_default }}</strong>
+</div>
+{% endif %}
+<div class="card p-4 mb-4">
+  <form method="post" action="{{ url_for('commercial.importar_preview', slug=slug) }}" enctype="multipart/form-data">
+    <input type="hidden" name="slug" value="{{ slug or '' }}">
+    <input type="hidden" name="producto_default" value="{{ producto_default or '' }}">
+    <div class="mb-3">
+      <label class="form-label">Archivo CSV</label>
+      <input type="file" name="archivo" class="form-control" accept=".csv,.xlsx" required>
+      <div class="form-text">CSV o Excel (.xlsx) · UTF-8/Latin-1 · máx. 15 MB</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Separador (opcional)</label>
+      <select name="delimiter" class="form-select" style="max-width:120px">
+        <option value="">Auto</option>
+        <option value=",">Coma</option>
+        <option value=";">Punto y coma</option>
+        <option value="	">Tab</option>
+      </select>
+    </div>
+    <button class="btn btn-primary"><i class="bi bi-eye"></i> Vista previa</button>
+  </form>
+</div>
+<h3 class="h6">Importación rápida por producto</h3>
+<div class="d-flex flex-wrap gap-2">
+  {% for slug_key, nombre in product_slugs.items() %}
+  <a href="{{ url_for('commercial.importar', slug=slug_key) }}" class="btn btn-sm btn-outline-primary">{{ nombre }}</a>
+  {% endfor %}
+</div>
+{% endblock %}

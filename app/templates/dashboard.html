@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block title %}Panel tarotista{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h2 class="mb-1"><i class="bi bi-speedometer2"></i> Tu día — {{ hoy.strftime('%d/%m/%Y') }}</h2>
+    <p class="text-muted mb-0">Todo lo pendiente en un solo lugar</p>
+    {% if db_status %}
+    <p class="small mb-0 mt-1">
+      <span class="badge bg-{{ 'danger' if db_status.warning else 'success' }}">{{ db_status.label }}</span>
+      <span class="text-muted">· {{ stats.clientes }} clientes en CRM</span>
+      {% if db_status.warning %}
+      <span class="text-danger">— Revisa DB_HOST en .env (estás en SQLite vacío)</span>
+      {% endif %}
+    </p>
+    {% endif %}
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('social.index') }}" class="btn btn-primary"><i class="bi bi-magic"></i> Crear post</a>
+    <a href="{{ url_for('clients.list_clients') }}" class="btn btn-outline-primary"><i class="bi bi-people"></i> Clientes</a>
+    <a href="{{ url_for('commercial.saas_rapido') }}" class="btn btn-success"><i class="bi bi-person-plus-fill"></i> Usuario portal</a>
+    <a href="/demos/" class="btn btn-outline-warning"><i class="bi bi-play-circle"></i> Demo clientes</a>
+    <a href="{{ url_for('social.calendar') }}" class="btn btn-outline-secondary"><i class="bi bi-calendar3"></i> Calendario</a>
+    <a href="{{ url_for('prospects.list_prospects') }}" class="btn btn-outline-secondary"><i class="bi bi-stars"></i> Prospectos</a>
+    <a href="{{ url_for('commercial.pipeline') }}" class="btn btn-outline-success"><i class="bi bi-kanban"></i> Pipeline</a>
+  </div>
+</div>
+
+{% if comercial %}
+<div class="row g-3 mb-4">
+  <div class="col-12"><h5 class="section-title"><i class="bi bi-briefcase"></i> Comercial — hoy</h5></div>
+  <div class="col-6 col-md-2">
+    <div class="card card-stat p-3 h-100 border-danger">
+      <div class="text-muted small">Seg. vencidos</div>
+      <div class="h4 text-danger">{{ comercial.seg_vencidos }}</div>
+      <a href="{{ url_for('commercial.seguimientos') }}" class="small">Ver →</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-stat p-3 h-100 border-warning">
+      <div class="text-muted small">Seg. hoy</div>
+      <div class="h4">{{ comercial.seg_hoy }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-stat p-3 h-100">
+      <div class="text-muted small">Ventas mes</div>
+      <div class="h4">{{ comercial.ventas_mes }}</div>
+      <div class="small">${{ '{:,.0f}'.format(comercial.monto_mes) }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-stat p-3 h-100">
+      <div class="text-muted small">MRR nuevo</div>
+      <div class="h4">${{ '{:,.0f}'.format(comercial.mrr_mes) }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-stat p-3 h-100">
+      <div class="text-muted small">Com. pendiente</div>
+      <div class="h4">${{ '{:,.0f}'.format(comercial.com_pendiente) }}</div>
+      <a href="{{ url_for('commercial.comisiones_list') }}" class="small">Ver →</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-stat p-3 h-100">
+      <div class="text-muted small">Propuestas</div>
+      <div class="h4">{{ comercial.prop_pendientes }}</div>
+    </div>
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h6 class="mb-2">Embudo</h6>
+      <div class="d-flex flex-wrap gap-2 small">
+        <span class="badge text-bg-secondary">Nuevos {{ comercial.embudo.nuevos }}</span>
+        <span class="badge text-bg-info">Contactados {{ comercial.embudo.contactados }}</span>
+        <span class="badge text-bg-primary">Demos {{ comercial.embudo.demos }}</span>
+        <span class="badge text-bg-warning text-dark">Propuestas {{ comercial.embudo.propuestas }}</span>
+        <span class="badge text-bg-success">Ganados {{ comercial.embudo.cerrados }}</span>
+        <span class="badge text-bg-dark">Perdidos {{ comercial.embudo.perdidos }}</span>
+      </div>
+      <a href="{{ url_for('commercial.pipeline') }}" class="small d-block mt-2">Abrir pipeline →</a>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h6 class="mb-2">Alertas</h6>
+      <ul class="small mb-0">
+        <li>Calientes sin seguimiento: <strong>{{ comercial.alertas.calientes_sin_seg }}</strong></li>
+        <li>Propuestas por vencer (3 días): <strong>{{ comercial.alertas.prop_por_vencer }}</strong></li>
+        <li>Onboarding en curso: <strong>{{ comercial.alertas.sin_onboarding }}</strong></li>
+        <li>Comisiones pendientes: <strong>{{ comercial.alertas.com_sin_aprobar }}</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card card-stat p-3 h-100">
+      <div class="text-muted small">Posts pendientes</div>
+      <div class="display-6">{{ stats.publicaciones_pendientes }}</div>
+      <a href="{{ url_for('social.index') }}" class="small">Ir a redes →</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-stat p-3 h-100 border-warning">
+      <div class="text-muted small">Publicar hoy</div>
+      <div class="display-6 text-warning">{{ pubs_hoy|length }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-stat p-3 h-100">
+      <div class="text-muted small">Prospectos por contactar</div>
+      <div class="display-6">{{ stats.prospectos_pendientes }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-stat p-3 h-100">
+      <div class="text-muted small">Clientes</div>
+      <div class="display-6">{{ stats.clientes }}</div>
+      <a href="{{ url_for('clients.list_clients') }}" class="small">Ver clientes →</a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <h5 class="section-title"><i class="bi bi-megaphone"></i> Publicaciones — hoy</h5>
+    <div class="card mb-3">
+      <div class="card-body p-0">
+        {% if pubs_hoy %}
+        <table class="table mb-0 align-middle">
+          <tbody>
+          {% for p in pubs_hoy %}
+          <tr>
+            <td style="width:52px">{% if p.imagen_path %}<img src="{{ crm_root }}/uploads/{{ p.imagen_path }}" class="rounded" style="width:44px;height:44px;object-fit:cover">{% endif %}</td>
+            <td>
+              <strong>{{ p.titulo or 'Sin título' }}</strong>
+              <div class="small text-muted text-capitalize"><i class="bi bi-{{ p.plataforma }}"></i> {{ p.plataforma }} · {{ p.fecha_programada.strftime('%H:%M') }}</div>
+            </td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-primary" href="{{ url_for('social.publish_workflow', pid=p.id) }}">Publicar</a>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="p-4 text-muted text-center">Nada programado para hoy. <a href="{{ url_for('social.index') }}">Crear contenido</a></div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if pubs_atrasadas %}
+    <h5 class="section-title text-danger"><i class="bi bi-exclamation-circle"></i> Atrasadas</h5>
+    <div class="card mb-3 border-danger">
+      <div class="card-body p-0">
+        <table class="table mb-0">
+          <tbody>
+          {% for p in pubs_atrasadas %}
+          <tr>
+            <td>{{ p.titulo or '—' }}</td>
+            <td class="text-end text-muted small">{{ p.fecha_programada.strftime('%d/%m %H:%M') }}</td>
+            <td class="text-end"><a class="btn btn-sm btn-outline-danger" href="{{ url_for('social.publish_workflow', pid=p.id) }}">Publicar</a></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if pubs_sin_fecha %}
+    <h5 class="section-title"><i class="bi bi-inbox"></i> Sin fecha (publica cuando puedas)</h5>
+    <div class="card">
+      <div class="list-group list-group-flush">
+        {% for p in pubs_sin_fecha %}
+        <a href="{{ url_for('social.publish_workflow', pid=p.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span>{{ p.titulo or 'Borrador' }}</span>
+          <span class="badge text-bg-secondary">{{ p.plataforma }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-5">
+    <h5 class="section-title"><i class="bi bi-chat-dots"></i> Prospectos — siguiente acción</h5>
+    <div class="card mb-3">
+      <div class="list-group list-group-flush">
+        {% for p in prospectos_accion %}
+        <a href="{{ url_for('prospects.detail', pid=p.id) }}" class="list-group-item list-group-item-action">
+          <div class="fw-semibold">{{ p.nombre or '—' }}</div>
+          <div class="small text-muted">{{ p.estado.replace('_', ' ') }}</div>
+        </a>
+        {% else %}
+        <div class="list-group-item text-muted">Sin prospectos pendientes.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <h5 class="section-title"><i class="bi bi-list-check"></i> Otros pendientes</h5>
+    <div class="card">
+      <div class="card-body small">
+        {% if tareas_sociales %}
+        <p class="mb-2 fw-semibold">Redes (DM/tareas)</p>
+        <ul class="mb-3">
+          {% for t in tareas_sociales %}
+          <li>{{ t.tipo }} → {{ t.objetivo or '—' }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if seguimientos %}
+        <p class="mb-2 fw-semibold">Seguimiento clientes</p>
+        <ul class="mb-0">
+          {% for s in seguimientos %}
+          <li><a href="{{ url_for('clients.detail', cid=s.cliente_id) }}">{{ s.cliente.nombre }}</a> — {{ s.proxima_fecha.strftime('%d/%m') }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if not tareas_sociales and not seguimientos %}
+        <span class="text-muted">Sin otros pendientes esta semana.</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

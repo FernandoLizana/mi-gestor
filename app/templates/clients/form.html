@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if cliente else 'Nuevo' }} cliente{% endblock %}
+{% block content %}
+<h2>{{ 'Editar' if cliente else 'Nuevo' }} cliente</h2>
+<form method="post" class="card p-4 mt-3">
+  <div class="row g-3">
+    {% set fields = [
+      ('nombre','Nombre',True,'text'),('empresa','Empresa',False,'text'),
+      ('rut','RUT',False,'text'),('email','Email',False,'email'),
+      ('telefono','Teléfono',False,'text'),('whatsapp','WhatsApp',False,'text'),
+      ('direccion','Dirección',False,'text'),('sitio_web','Sitio web / url_perfil',False,'url'),
+      ('instagram','Instagram (@usuario)',False,'text'),('linkedin','LinkedIn (URL)',False,'text'),
+      ('facebook','Facebook (URL)',False,'text'),('fuente','Fuente / origen',False,'text')
+    ] %}
+    {% for name, label, req, t in fields %}
+    <div class="col-md-6"><label class="form-label">{{ label }}</label>
+      <input type="{{t}}" class="form-control" name="{{name}}" {% if req %}required{% endif %}
+        value="{{ cliente|attr(name) if cliente and cliente|attr(name) else '' }}"></div>
+    {% endfor %}
+    <div class="col-md-4"><label class="form-label">Estado</label>
+      <select class="form-select" name="estado">
+        {% for e in ['prospecto','activo','inactivo','cerrado'] %}
+        <option value="{{e}}" {% if cliente and cliente.estado==e %}selected{% endif %}>{{e}}</option>
+        {% endfor %}
+      </select></div>
+    <div class="col-12"><label class="form-label">Notas</label>
+      <textarea class="form-control" name="notas" rows="4">{{ cliente.notas if cliente else '' }}</textarea></div>
+  </div>
+  <div class="mt-3">
+    <button class="btn btn-primary">Guardar</button>
+    <a href="{{ url_for('clients.list_clients') }}" class="btn btn-link">Cancelar</a>
+    {% if cliente %}
+    <button formaction="{{ url_for('clients.delete_client', cid=cliente.id) }}" formmethod="post"
+      class="btn btn-outline-danger float-end" onclick="return confirm('¿Eliminar cliente?')">Eliminar</button>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Reporte semanal{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css') }}">{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<h2 class="h4 mb-3">Reporte semanal para Fernando</h2>
+<div class="card p-4 mb-3">
+  <pre id="reporteText" style="white-space:pre-wrap;font-family:inherit">{{ texto }}</pre>
+</div>
+<button type="button" class="btn btn-primary" id="btnCopy"><i class="bi bi-clipboard"></i> Copiar para WhatsApp</button>
+<div class="row g-2 mt-4">
+  <div class="col-md-4"><div class="card p-3"><div class="small">Leads nuevos</div><div class="h4">{{ reporte.leads_nuevos }}</div></div></div>
+  <div class="col-md-4"><div class="card p-3"><div class="small">Ventas</div><div class="h4">{{ reporte.ventas_count }}</div></div></div>
+  <div class="col-md-4"><div class="card p-3"><div class="small">MRR nuevo</div><div class="h4">${{ '{:,.0f}'.format(reporte.mrr_nuevo or 0) }}</div></div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('btnCopy').addEventListener('click', function() {
+  navigator.clipboard.writeText(document.getElementById('reporteText').innerText).then(() => alert('Reporte copiado'));
+});
+</script>
+{% endblock %}

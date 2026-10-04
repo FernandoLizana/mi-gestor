@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Ventas{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css') }}">{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<h2 class="h4 mb-3">Ventas cerradas</h2>
+<div class="table-responsive">
+  <table class="table table-sm">
+    <thead><tr><th>Cliente</th><th>Producto</th><th>Plan</th><th>Primer pago</th><th>Mensual</th><th>Pago</th><th>Cierre</th></tr></thead>
+    <tbody>
+      {% for v in ventas %}
+      <tr>
+        <td>{{ v.cliente.empresa or v.cliente.nombre if v.cliente else '—' }}</td>
+        <td>{{ v.producto }}</td>
+        <td>{{ v.plan }}</td>
+        <td>${{ '{:,.0f}'.format(v.monto_total_primer_pago or 0) }}</td>
+        <td>${{ '{:,.0f}'.format(v.mensualidad_cobrada or 0) }}</td>
+        <td><span class="badge text-bg-{{ 'success' if v.estado_pago=='pagado' else 'warning' }}">{{ v.estado_pago }}</span></td>
+        <td>{{ v.fecha_cierre }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted">Sin ventas registradas</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

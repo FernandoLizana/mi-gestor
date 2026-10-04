@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Nueva propuesta{% endblock %}
+{% block content %}
+<h2 class="h5 mb-3">Propuesta para {{ cliente.empresa or cliente.nombre }}</h2>
+<form method="post" class="card p-4">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Producto</label>
+      <select name="producto" class="form-select" required>
+        {% for pr in productos %}<option value="{{ pr.nombre }}" {% if cliente.producto_interes==pr.nombre %}selected{% endif %}>{{ pr.nombre }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6"><label class="form-label">Plan</label><input name="plan" class="form-control" value="{{ cliente.plan_sugerido or '' }}"></div>
+    <div class="col-md-4"><label class="form-label">Setup</label><input name="setup" type="number" class="form-control" value="{{ cliente.setup_estimado or '' }}"></div>
+    <div class="col-md-4"><label class="form-label">Mensualidad</label><input name="mensualidad" type="number" class="form-control" value="{{ cliente.mensualidad_estimada or '' }}"></div>
+    <div class="col-md-4"><label class="form-label">Duración mínima (meses)</label><input name="duracion_minima" type="number" class="form-control" value="12"></div>
+    <div class="col-md-4"><label class="form-label">Descuento setup</label><input name="descuento_setup" type="number" class="form-control" value="0"></div>
+    <div class="col-md-4"><label class="form-label">Descuento mensualidad</label><input name="descuento_mensualidad" type="number" class="form-control" value="0"></div>
+    <div class="col-md-4"><label class="form-label">Vencimiento</label><input name="fecha_vencimiento" type="date" class="form-control"></div>
+    <div class="col-12"><label class="form-label">Condiciones</label><textarea name="condiciones" class="form-control" rows="3"></textarea></div>
+    <div class="col-12"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+  </div>
+  <button class="btn btn-primary mt-3">Guardar propuesta</button>
+  <a href="{{ url_for('clients.detail', cid=cliente.id) }}" class="btn btn-outline-secondary mt-3">Cancelar</a>
+</form>
+{% endblock %}

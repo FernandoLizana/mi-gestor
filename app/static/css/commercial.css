@@ -1,0 +1,55 @@
+.pipeline-board {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  min-height: 60vh;
+}
+.pipeline-col {
+  flex: 0 0 280px;
+  max-width: 280px;
+  background: var(--bs-light, #f8f9fa);
+  border-radius: 0.5rem;
+}
+.pipeline-col-header {
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pipeline-col-body {
+  padding: 0.5rem;
+  min-height: 120px;
+}
+.pipeline-card {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 0.6rem;
+  margin-bottom: 0.5rem;
+  cursor: grab;
+  font-size: 0.875rem;
+}
+.pipeline-card.dragging { opacity: 0.5; }
+.pipeline-col-body.drag-over { background: rgba(13,110,253,0.08); }
+.pipeline-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.35rem 0;
+}
+.pipeline-card-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+.badge-priority { font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px; text-transform: capitalize; }
+.badge-priority--alta, .badge-priority--muy-alta { background: #dc3545; color: #fff; }
+.badge-priority--media { background: #ffc107; color: #000; }
+.badge-priority--baja { background: #6c757d; color: #fff; }
+.commercial-subnav .btn { font-size: 0.8rem; }
+@media (max-width: 576px) {
+  .pipeline-col { flex: 0 0 85vw; max-width: 85vw; }
+}

@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+{% block title %}Asistente: nuevo proyecto{% endblock %}
+{% block head_extra %}
+<style>
+  .wizard-stepper { display:flex; gap:8px; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .wstep { flex:1; min-width:120px; padding:.6rem .75rem; background:#fff; border-radius:10px;
+           border:2px solid #e5e7eb; font-size:.85rem; color:#6b7280; }
+  .wstep.active { border-color:#0d6efd; color:#0d6efd; font-weight:600; }
+  .wstep.done { border-color:#198754; color:#198754; }
+  .wstep .num { font-weight:700; margin-right:6px; }
+  .wpane { display:none; background:#fff; border-radius:12px; padding:2rem; box-shadow:0 2px 10px rgba(0,0,0,.05); }
+  .wpane.active { display:block; }
+  .wpane h3 { margin-bottom:.25rem; }
+  .wpane .lead { color:#6b7280; margin-bottom:1.5rem; }
+  .tipo-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.75rem; }
+  .tipo-card { border:2px solid #e5e7eb; border-radius:10px; padding:1rem; cursor:pointer; text-align:center; transition:all .15s; }
+  .tipo-card:hover { border-color:#0d6efd; }
+  .tipo-card.selected { border-color:#0d6efd; background:#e7f1ff; }
+  .tipo-card i { font-size:1.8rem; display:block; margin-bottom:.4rem; color:#0d6efd; }
+  .yes-no { display:flex; gap:1rem; }
+  .yes-no .btn { flex:1; padding:1.25rem; }
+  .platform-pill { display:inline-block; padding:.5rem 1rem; border:2px solid #e5e7eb; border-radius:30px; cursor:pointer; margin:.25rem; user-select:none; }
+  .platform-pill.selected { background:#0d6efd; color:#fff; border-color:#0d6efd; }
+  .strategy-preview { background:#f8f9fa; border-radius:8px; padding:1rem; max-height:60vh; overflow-y:auto; font-size:.92rem; }
+  .strategy-preview h1 { font-size:1.4rem; }
+  .strategy-preview h2 { font-size:1.1rem; margin-top:1rem; color:#0d6efd; }
+  .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .summary-block { background:#f8f9fa; padding:1rem; border-radius:8px; }
+  .summary-block strong { color:#0d6efd; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2><i class="bi bi-magic"></i> Asistente: nuevo proyecto</h2>
+  <a href="{{ url_for('projects.list_projects') }}" class="btn btn-link"><i class="bi bi-x-lg"></i> Salir</a>
+</div>
+
+<div class="wizard-stepper">
+  <div class="wstep active" data-step="1"><span class="num">1</span> Datos básicos</div>
+  <div class="wstep" data-step="2"><span class="num">2</span> Planificación</div>
+  <div class="wstep" data-step="3"><span class="num">3</span> Redes sociales</div>
+  <div class="wstep" data-step="4"><span class="num">4</span> Plan de ventas</div>
+  <div class="wstep" data-step="5"><span class="num">5</span> Estrategia</div>
+  <div class="wstep" data-step="6"><span class="num">6</span> Resumen</div>
+</div>
+
+<form method="post" action="{{ url_for('projects.wizard_save') }}" id="wizForm">
+
+<!-- ============= PASO 1 ============= -->
+<div class="wpane active" data-pane="1">
+  <h3>1. Datos básicos</h3>
+  <p class="lead">Empecemos por lo esencial. ¿De qué se trata el proyecto?</p>
+
+  <label class="form-label">Tipo de proyecto</label>
+  <div class="tipo-grid mb-4">
+    {% for k, label, icon in [
+      ('servicio','Servicio a cliente','briefcase'),
+      ('producto','Producto / negocio','box-seam'),
+      ('marketing','Marketing / redes','megaphone'),
+      ('fondo','Postulación a fondo','cash-coin'),
+      ('vivienda','Subsidio vivienda','house-door'),
+      ('otro','Otro / personal','three-dots')
+    ] %}
+    <div class="tipo-card" data-tipo="{{k}}">
+      <i class="bi bi-{{icon}}"></i>{{label}}
+    </div>
+    {% endfor %}
+  </div>
+  <input type="hidden" name="tipo" id="fTipo" required>
+
+  <div class="row g-3">
+    <div class="col-md-8">
+      <label class="form-label">Nombre del proyecto*</label>
+      <input class="form-control form-control-lg" name="nombre" id="fNombre" required placeholder="Ej. Lanzamiento panadería La Espiga">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Cliente (opcional)</label>
+      <select class="form-select form-select-lg" name="cliente_id">
+        <option value="">— sin cliente —</option>
+        {% for c in clientes %}<option value="{{c.id}}">{{c.nombre}}{% if c.empresa %} ({{c.empresa}}){% endif %}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-12">
+      <label class="form-label">¿Qué quieres lograr con este proyecto?</label>
+      <textarea class="form-control" name="objetivo" id="fObjetivo" rows="2"
+        placeholder="Ej. Generar 50 clientes nuevos en 3 meses · Adjudicar $5M Sercotec · Obtener subsidio DS1"></textarea>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Fecha de inicio</label>
+      <input type="date" class="form-control" name="fecha_inicio" value="{{ today }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Fecha estimada de fin</label>
+      <input type="date" class="form-control" name="fecha_fin">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Presupuesto (CLP)</label>
+      <input type="number" step="1000" class="form-control" name="presupuesto" placeholder="0">
+    </div>
+  </div>
+</div>
+
+<!-- ============= PASO 2 ============= -->
+<div class="wpane" data-pane="2">
+  <h3>2. Planificación</h3>
+  <p class="lead">¿Quieres usar una plantilla con tareas predefinidas o partir desde cero?</p>
+
+  <div class="mb-3">
+    <label class="form-label">Plantilla recomendada</label>
+    <select class="form-select form-select-lg" name="plantilla" id="fPlantilla">
+      <option value="">— Sin plantilla (crearé tareas después) —</option>
+      {% for k, v in plantillas.items() %}
+      <option value="{{k}}" data-desc="{{v.descripcion}}" data-dur="{{v.duracion_dias}}" data-tareas="{{v.tareas|length}}">{{v.nombre}}</option>
+      {% endfor %}
+    </select>
+    <div class="form-text" id="pltInfo"></div>
+  </div>
+
+  <hr>
+  <h6>Meta principal del proyecto (opcional pero recomendado)</h6>
+  <div class="row g-2">
+    <div class="col-md-6"><input class="form-control" name="meta_nombre" placeholder="Nombre de la meta (ej. Ventas, Seguidores, Monto adjudicado)"></div>
+    <div class="col-md-3"><input type="number" step="any" class="form-control" name="meta_valor" placeholder="Valor objetivo"></div>
+    <div class="col-md-3"><input class="form-control" name="meta_unidad" placeholder="Unidad (CLP, leads, %)"></div>
+  </div>
+</div>
+
+<!-- ============= PASO 3 ============= -->
+<div class="wpane" data-pane="3">
+  <h3>3. Redes sociales</h3>
+  <p class="lead">¿Este proyecto requiere comunicación en redes sociales?</p>
+
+  <div class="yes-no mb-4">
+    <button type="button" class="btn btn-outline-primary btn-lg" data-redes="0">No usaré redes</button>
+    <button type="button" class="btn btn-primary btn-lg" data-redes="1">Sí, vamos con redes</button>
+  </div>
+  <input type="hidden" name="usa_redes" id="fUsaRedes" value="0">
+
+  <div id="redesConfig" style="display:none;">
+    <label class="form-label">¿En qué plataformas?</label>
+    <div class="mb-3">
+      {% for pl in ['instagram','linkedin','facebook','tiktok'] %}
+      <span class="platform-pill" data-plat="{{pl}}">
+        <i class="bi bi-{{pl}}"></i> {{pl|capitalize}}
+      </span>
+      {% endfor %}
+    </div>
+    <div id="platformsHidden"></div>
+
+    <label class="form-label">Frecuencia: ¿cuántas publicaciones por semana?</label>
+    <input type="range" class="form-range" min="0" max="14" value="3" name="frecuencia" id="fFrecuencia">
+    <div class="text-center"><strong id="fFrecLabel">3 posts / semana</strong></div>
+  </div>
+</div>
+
+<!-- ============= PASO 4 ============= -->
+<div class="wpane" data-pane="4">
+  <h3>4. Plan de ventas</h3>
+  <p class="lead">¿Hay venta directa de un producto o servicio?</p>
+
+  <div class="yes-no mb-4">
+    <button type="button" class="btn btn-outline-primary btn-lg" data-ventas="0">No aplica</button>
+    <button type="button" class="btn btn-primary btn-lg" data-ventas="1">Sí, definamos el plan</button>
+  </div>
+  <input type="hidden" name="tiene_ventas" id="fTieneVentas" value="0">
+
+  <div id="ventasConfig" style="display:none;">
+    <div class="row g-3">
+      <div class="col-md-4"><label class="form-label">Precio unitario (CLP)</label>
+        <input type="number" step="1000" class="form-control" name="precio" id="fPrecio" placeholder="0"></div>
+      <div class="col-md-4"><label class="form-label">Meta de unidades / clientes</label>
+        <input type="number" class="form-control" name="unidades_meta" id="fUnidades" placeholder="0"></div>
+      <div class="col-md-4"><label class="form-label">Conversión estimada (%)</label>
+        <input type="number" step="0.5" class="form-control" name="conversion" id="fConversion" placeholder="5"></div>
+
+      <div class="col-12"><label class="form-label">Canales de venta</label><br>
+        {% for ch in ['web','instagram','linkedin','whatsapp','referidos','ferias','presencial','email'] %}
+        <span class="platform-pill" data-canal="{{ch}}">{{ch}}</span>
+        {% endfor %}
+        <div id="canalesHidden"></div>
+      </div>
+
+      <div class="col-12"><label class="form-label">Notas del plan</label>
+        <textarea class="form-control" name="plan_notas" rows="2" placeholder="Ej. enfocar en clientes B2B locales, ofrecer promo de lanzamiento..."></textarea></div>
+    </div>
+
+    <div class="alert alert-info mt-3" id="ingresoEstim" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ============= PASO 5 ============= -->
+<div class="wpane" data-pane="5">
+  <h3>5. Estrategia recomendada</h3>
+  <p class="lead">Generamos una estrategia personalizada según tu tipo de proyecto, redes y plan de ventas. Puedes editarla.</p>
+
+  <button type="button" class="btn btn-primary mb-3" id="btnGenStrategy"><i class="bi bi-stars"></i> Generar / regenerar</button>
+  <button type="button" class="btn btn-outline-secondary mb-3" id="btnEditStrategy"><i class="bi bi-pencil"></i> Editar manualmente</button>
+
+  <div class="strategy-preview" id="strategyPreview">
+    <em class="text-muted">Haz click en "Generar" para ver tu estrategia recomendada.</em>
+  </div>
+  <textarea name="estrategia_contenido" id="strategyTextarea" class="form-control mt-2" rows="14" style="display:none;"></textarea>
+</div>
+
+<!-- ============= PASO 6 ============= -->
+<div class="wpane" data-pane="6">
+  <h3>6. Resumen y confirmación</h3>
+  <p class="lead">Revisa los datos. Si algo no encaja, vuelve atrás.</p>
+
+  <div class="summary-grid" id="summary"></div>
+
+  <div class="alert alert-success mt-4">
+    <i class="bi bi-check2-circle"></i>
+    Al confirmar, se creará el proyecto con todas las tareas, metas, plan de ventas y estrategia. Podrás editarlo después.
+  </div>
+</div>
+
+<!-- Navegación -->
+<div class="d-flex justify-content-between mt-3">
+  <button type="button" class="btn btn-outline-secondary" id="btnPrev" disabled><i class="bi bi-arrow-left"></i> Atrás</button>
+  <button type="button" class="btn btn-primary" id="btnNext">Siguiente <i class="bi bi-arrow-right"></i></button>
+  <button type="submit" class="btn btn-success" id="btnSave" style="display:none;"><i class="bi bi-check2"></i> Crear proyecto</button>
+</div>
+
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TOTAL_STEPS = 6;
+let currentStep = 1;
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+// ----- Stepper / panes -----
+function showStep(n) {
+  currentStep = n;
+  $$(".wpane").forEach(p => p.classList.toggle("active", +p.dataset.pane === n));
+  $$(".wstep").forEach(s => {
+    const i = +s.dataset.step;
+    s.classList.toggle("active", i === n);
+    s.classList.toggle("done", i < n);
+  });
+  $("#btnPrev").disabled = n === 1;
+  $("#btnNext").style.display = n === TOTAL_STEPS ? "none" : "inline-block";
+  $("#btnSave").style.display = n === TOTAL_STEPS ? "inline-block" : "none";
+  if (n === 6) renderSummary();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function validateStep(n) {
+  if (n === 1) {
+    if (!$("#fTipo").value) { alert("Selecciona el tipo de proyecto"); return false; }
+    if (!$("#fNombre").value.trim()) { alert("El nombre es obligatorio"); $("#fNombre").focus(); return false; }
+  }
+  return true;
+}
+
+$("#btnNext").addEventListener("click", () => {
+  if (!validateStep(currentStep)) return;
+  if (currentStep < TOTAL_STEPS) showStep(currentStep + 1);
+});
+$("#btnPrev").addEventListener("click", () => {
+  if (currentStep > 1) showStep(currentStep - 1);
+});
+$$(".wstep").forEach(s => s.addEventListener("click", () => {
+  const target = +s.dataset.step;
+  if (target < currentStep || validateStep(currentStep)) showStep(target);
+}));
+
+// ----- Tipo de proyecto cards -----
+$$(".tipo-card").forEach(card => {
+  card.addEventListener("click", () => {
+    $$(".tipo-card").forEach(c => c.classList.remove("selected"));
+    card.classList.add("selected");
+    $("#fTipo").value = card.dataset.tipo;
+  });
+});
+
+// ----- Plantilla info -----
+const selPlt = $("#fPlantilla"), pltInfo = $("#pltInfo");
+function updatePltInfo() {
+  const o = selPlt.options[selPlt.selectedIndex];
+  if (o.value) pltInfo.textContent = `${o.dataset.desc} · ${o.dataset.tareas} tareas · ${o.dataset.dur} días.`;
+  else pltInfo.textContent = "";
+}
+selPlt.addEventListener("change", updatePltInfo);
+
+// ----- Redes Yes/No -----
+$$("[data-redes]").forEach(b => b.addEventListener("click", () => {
+  const v = b.dataset.redes;
+  $("#fUsaRedes").value = v;
+  $("#redesConfig").style.display = v === "1" ? "block" : "none";
+  $$("[data-redes]").forEach(x => {
+    x.classList.toggle("btn-primary", x === b);
+    x.classList.toggle("btn-outline-primary", x !== b);
+  });
+}));
+
+// ----- Plataformas pills -----
+const platformsHidden = $("#platformsHidden");
+$$("[data-plat]").forEach(p => p.addEventListener("click", () => {
+  p.classList.toggle("selected");
+  platformsHidden.innerHTML = "";
+  $$("[data-plat].selected").forEach(s => {
+    const inp = document.createElement("input");
+    inp.type = "hidden"; inp.name = "plataformas"; inp.value = s.dataset.plat;
+    platformsHidden.appendChild(inp);
+  });
+}));
+
+// ----- Frecuencia slider -----
+const slider = $("#fFrecuencia"), label = $("#fFrecLabel");
+slider.addEventListener("input", () => label.textContent = `${slider.value} posts / semana`);
+
+// ----- Ventas Yes/No -----
+$$("[data-ventas]").forEach(b => b.addEventListener("click", () => {
+  const v = b.dataset.ventas;
+  $("#fTieneVentas").value = v;
+  $("#ventasConfig").style.display = v === "1" ? "block" : "none";
+  $$("[data-ventas]").forEach(x => {
+    x.classList.toggle("btn-primary", x === b);
+    x.classList.toggle("btn-outline-primary", x !== b);
+  });
+}));
+
+// ----- Canales pills -----
+const canalesHidden = $("#canalesHidden");
+$$("[data-canal]").forEach(p => p.addEventListener("click", () => {
+  p.classList.toggle("selected");
+  canalesHidden.innerHTML = "";
+  $$("[data-canal].selected").forEach(s => {
+    const inp = document.createElement("input");
+    inp.type = "hidden"; inp.name = "canales"; inp.value = s.dataset.canal;
+    canalesHidden.appendChild(inp);
+  });
+}));
+
+// ----- Estimación de ingreso -----
+function updateIngresoEstim() {
+  const precio = +$("#fPrecio").value || 0;
+  const unidades = +$("#fUnidades").value || 0;
+  const conv = +$("#fConversion").value || 0;
+  const box = $("#ingresoEstim");
+  if (precio && unidades) {
+    const ingreso = precio * unidades;
+    let txt = `Si vendes ${unidades} unidades a $${ingreso.toLocaleString('es-CL')} bruto.`;
+    if (conv > 0) {
+      const leads = Math.ceil(unidades / (conv/100));
+      txt += ` Necesitarás aproximadamente <strong>${leads} leads</strong> (con ${conv}% de conversión).`;
+    }
+    box.innerHTML = "💰 " + txt;
+    box.style.display = "block";
+  } else { box.style.display = "none"; }
+}
+["fPrecio","fUnidades","fConversion"].forEach(id => $("#"+id).addEventListener("input", updateIngresoEstim));
+
+// ----- Estrategia: generar / editar -----
+function collectStrategyData() {
+  const plataformas = Array.from($$("[data-plat].selected")).map(s => s.dataset.plat);
+  const canales = Array.from($$("[data-canal].selected")).map(s => s.dataset.canal).join(", ");
+  return {
+    tipo: $("#fTipo").value,
+    nombre: $("#fNombre").value,
+    objetivo: $("#fObjetivo").value,
+    usa_redes: $("#fUsaRedes").value === "1",
+    plataformas: plataformas.join(","),
+    frecuencia: $("#fFrecuencia").value,
+    tiene_ventas: $("#fTieneVentas").value === "1",
+    precio: $("#fPrecio").value,
+    unidades_meta: $("#fUnidades").value,
+    canales: canales,
+    conversion: $("#fConversion").value,
+  };
+}
+$("#btnGenStrategy").addEventListener("click", async () => {
+  const r = await fetch("{{ url_for('projects.wizard_preview') }}", {
+    method: "POST", headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(collectStrategyData())
+  });
+  const j = await r.json();
+  $("#strategyTextarea").value = j.contenido;
+  $("#strategyPreview").innerHTML = mdToHtml(j.contenido);
+});
+$("#btnEditStrategy").addEventListener("click", () => {
+  const ta = $("#strategyTextarea"), pv = $("#strategyPreview");
+  if (ta.style.display === "none") {
+    ta.style.display = "block"; pv.style.display = "none";
+  } else {
+    ta.style.display = "none"; pv.style.display = "block";
+    pv.innerHTML = mdToHtml(ta.value);
+  }
+});
+
+// Markdown muy simple
+function mdToHtml(md) {
+  if (!md) return "";
+  let h = md
+    .replace(/^# (.*$)/gm, "<h1>$1</h1>")
+    .replace(/^## (.*$)/gm, "<h2>$1</h2>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/^\- \[ \] (.*)$/gm, "<div>☐ $1</div>")
+    .replace(/^\- (.*)$/gm, "<li>$1</li>")
+    .replace(/(<li>.*<\/li>\n?)+/g, m => "<ul>" + m + "</ul>")
+    .replace(/\n\n/g, "<br>");
+  return h;
+}
+
+// ----- Resumen -----
+function renderSummary() {
+  const tipo = $("#fTipo").value || "(no definido)";
+  const plataformas = Array.from($$("[data-plat].selected")).map(s => s.dataset.plat).join(", ") || "—";
+  const canales = Array.from($$("[data-canal].selected")).map(s => s.dataset.canal).join(", ") || "—";
+  const usa_redes = $("#fUsaRedes").value === "1";
+  const tiene_ventas = $("#fTieneVentas").value === "1";
+  const plt = selPlt.options[selPlt.selectedIndex].text;
+
+  $("#summary").innerHTML = `
+    <div class="summary-block"><strong>Nombre:</strong> ${$("#fNombre").value || "(falta)"}</div>
+    <div class="summary-block"><strong>Tipo:</strong> ${tipo}</div>
+    <div class="summary-block"><strong>Objetivo:</strong> ${$("#fObjetivo").value || "—"}</div>
+    <div class="summary-block"><strong>Plantilla:</strong> ${plt}</div>
+    <div class="summary-block"><strong>Redes sociales:</strong> ${usa_redes ? "Sí — " + plataformas + " · " + slider.value + " posts/sem" : "No"}</div>
+    <div class="summary-block"><strong>Plan de ventas:</strong> ${tiene_ventas ? `Sí — $${$("#fPrecio").value || 0} × ${$("#fUnidades").value || 0} via ${canales}` : "No"}</div>
+    <div class="summary-block" style="grid-column:1/-1;"><strong>Estrategia:</strong> ${$("#strategyTextarea").value ? "Generada ✓ (" + $("#strategyTextarea").value.length + " caracteres)" : "<span class='text-warning'>No generada — vuelve al paso 5</span>"}</div>
+  `;
+}
+</script>
+{% endblock %}

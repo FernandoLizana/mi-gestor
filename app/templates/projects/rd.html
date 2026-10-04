@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Proyectos I+D{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h2 class="mb-1"><i class="bi bi-flask"></i> Proyectos I+D</h2>
+    <p class="text-muted mb-0 small">Experimentos internos — no se publican en el sitio público</p>
+  </div>
+  <a href="{{ url_for('projects.list_projects') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-kanban"></i> Proyectos operativos
+  </a>
+</div>
+
+{% for category in categories %}
+<section class="mb-4">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <span class="badge text-bg-dark"><i class="bi {{ category.icon }}"></i> {{ category.name }}</span>
+    <span class="text-muted small">{{ category.description }}</span>
+  </div>
+  <div class="row g-3">
+    {% for project in category.projects %}
+    <div class="col-lg-6">
+      <div class="card h-100 border-secondary">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+              <span class="badge text-bg-warning text-dark">Interno</span>
+              {% if project.codename %}
+              <span class="badge text-bg-secondary">{{ project.codename }}</span>
+              {% endif %}
+            </div>
+            <span class="small text-muted">{{ project.status }}</span>
+          </div>
+          <h3 class="h5">{{ project.name }}</h3>
+          <p class="small text-primary mb-1">{{ project.solution_type }}</p>
+          <p class="mb-2">{{ project.pitch }}</p>
+          <p class="small text-muted">{{ project.summary }}</p>
+          {% if project.features %}
+          <ul class="small mb-3">
+            {% for f in project.features[:4] %}
+            <li>{{ f }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          <div class="d-flex flex-wrap gap-1 mb-2">
+            {% for tech in project.technologies[:5] %}
+            <span class="badge text-bg-light text-dark border">{{ tech }}</span>
+            {% endfor %}
+          </div>
+          {% if project.repo_note %}
+          <p class="small text-muted mb-2"><i class="bi bi-folder2"></i> {{ project.repo_note }}</p>
+          {% endif %}
+          {% if project.internal_url %}
+          <a href="{{ crm_root }}{{ project.internal_url }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-play-fill"></i> Abrir prototipo
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-muted">Sin proyectos en esta categoría.</div>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<div class="alert alert-secondary">No hay categorías I+D configuradas.</div>
+{% endfor %}
+{% endblock %}

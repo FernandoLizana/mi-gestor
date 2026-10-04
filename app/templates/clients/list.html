@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Clientes{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2><i class="bi bi-people"></i> Clientes</h2>
+  <a href="{{ url_for('clients.new_client') }}" class="btn btn-primary"><i class="bi bi-plus"></i> Nuevo</a>
+</div>
+<form class="mb-3" method="get">
+  <div class="input-group" style="max-width:400px;">
+    <input class="form-control" name="q" value="{{ q }}" placeholder="Buscar por nombre, empresa, email...">
+    <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+  </div>
+</form>
+<div class="card"><div class="card-body p-0">
+<table class="table table-hover mb-0">
+<thead><tr><th>Negocio</th><th>Producto</th><th>Pipeline</th><th>Comuna</th><th>WhatsApp</th><th>Fuente</th></tr></thead>
+<tbody>
+{% for c in clientes %}
+<tr>
+  <td><a href="{{ url_for('clients.detail', cid=c.id) }}">{{ c.empresa or c.nombre }}</a></td>
+  <td>{{ c.producto_interes or '—' }}</td>
+  <td><span class="badge bg-primary">{{ c.estado_pipeline or 'Nuevo' }}</span></td>
+  <td>{{ c.comuna or '—' }}</td>
+  <td>{{ c.whatsapp or c.telefono or '—' }}</td>
+  <td>{{ c.fuente or '—' }}</td>
+</tr>
+{% else %}
+<tr><td colspan="6" class="p-4 text-center text-muted">Sin clientes.</td></tr>
+{% endfor %}
+</tbody></table>
+</div></div>
+{% endblock %}

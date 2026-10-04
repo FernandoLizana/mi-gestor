@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if post else 'Nuevo' }} post{% endblock %}
+{% block content %}
+<h2>{{ 'Editar' if post else 'Nuevo' }} borrador / publicación</h2>
+<form method="post" class="card p-4 mt-3">
+  <div class="row g-3">
+    <div class="col-md-3"><label class="form-label">Plataforma</label>
+      <select class="form-select" name="plataforma" required>
+        {% for pl in ['instagram','linkedin','facebook','tiktok'] %}
+        <option value="{{pl}}" {% if post and post.plataforma==pl %}selected{% endif %}>{{pl}}</option>
+        {% endfor %}
+      </select></div>
+    <div class="col-md-6"><label class="form-label">Título</label>
+      <input class="form-control" name="titulo" value="{{ post.titulo if post else '' }}"></div>
+    <div class="col-md-3"><label class="form-label">Estado</label>
+      <select class="form-select" name="estado">
+        {% for e in ['borrador','programada','publicada'] %}
+        <option value="{{e}}" {% if post and post.estado==e %}selected{% endif %}>{{e}}</option>
+        {% endfor %}
+      </select></div>
+    <div class="col-12"><label class="form-label">Contenido / copy</label>
+      <textarea class="form-control" name="contenido" rows="6">{{ post.contenido if post else '' }}</textarea></div>
+    {% if post and post.imagen_path %}
+    <div class="col-12">
+      <label class="form-label">Imagen generada</label>
+      <div><img src="{{ crm_root }}/uploads/{{ post.imagen_path }}" alt="Imagen del post" class="img-fluid rounded" style="max-height:320px;"></div>
+    </div>
+    {% endif %}
+    <div class="col-md-8"><label class="form-label">Hashtags</label>
+      <input class="form-control" name="hashtags" value="{{ post.hashtags if post else '' }}"></div>
+    <div class="col-md-4"><label class="form-label">Fecha programada</label>
+      <input type="datetime-local" class="form-control" name="fecha_programada"
+        value="{{ post.fecha_programada.strftime('%Y-%m-%dT%H:%M') if post and post.fecha_programada else '' }}"></div>
+    <div class="col-md-6"><label class="form-label">Proyecto asociado</label>
+      <select class="form-select" name="proyecto_id">
+        <option value="">—</option>
+        {% for p in proyectos %}
+        <option value="{{p.id}}" {% if post and post.proyecto_id==p.id %}selected{% endif %}>{{p.nombre}}</option>
+        {% endfor %}
+      </select></div>
+    {% if post %}
+    <div class="col-12"><hr><h6>Regenerar imagen con IA</h6></div>
+    <div class="col-12">{% include "social/_referencias_picker.html" %}</div>
+    <div class="col-12"><hr><h6>Métricas (rellenar después de publicar)</h6></div>
+    <div class="col-md-3"><label class="form-label">Vistas</label><input type="number" class="form-control" name="vistas" value="{{post.vistas}}"></div>
+    <div class="col-md-3"><label class="form-label">Likes</label><input type="number" class="form-control" name="likes" value="{{post.likes}}"></div>
+    <div class="col-md-3"><label class="form-label">Comentarios</label><input type="number" class="form-control" name="comentarios" value="{{post.comentarios}}"></div>
+    <div class="col-md-3"><label class="form-label">Compartidos</label><input type="number" class="form-control" name="compartidos" value="{{post.compartidos}}"></div>
+    {% endif %}
+  </div>
+  <div class="mt-3 d-flex gap-2 flex-wrap">
+    <button class="btn btn-primary" name="after" value="save">Guardar</button>
+    {% if post and post.estado != 'publicada' %}
+    <button class="btn btn-success" name="after" value="publish" type="submit">
+      <i class="bi bi-send"></i> Guardar e ir a publicar
+    </button>
+    {% endif %}
+    {% if post %}
+    <button type="submit" formaction="{{ url_for('social.generate_post_image', pid=post.id) }}" formmethod="post" class="btn btn-outline-primary">
+      <i class="bi bi-image"></i> Generar imagen IA
+    </button>
+    {% endif %}
+    <a href="{{ url_for('social.index') }}" class="btn btn-link">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

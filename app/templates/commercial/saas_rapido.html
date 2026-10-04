@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Crear usuario portal{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-xl-7">
+    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+      <div>
+        <h2 class="mb-1"><i class="bi bi-box-arrow-in-right"></i> Crear usuario portal</h2>
+        <p class="text-muted mb-0">Sin prospecto, propuesta ni venta. Solo portal + datos de acceso.</p>
+      </div>
+      <a href="{{ url_for('commercial.saas_list') }}" class="btn btn-outline-secondary btn-sm">Ver todas las cuentas</a>
+    </div>
+
+    {% if cliente %}
+    <div class="alert alert-light border mb-3 py-2 small">
+      Vinculando a cliente existente: <strong>{{ cliente.empresa or cliente.nombre }}</strong>
+    </div>
+    {% endif %}
+
+    <form method="post" class="card p-4 shadow-sm">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Portal *</label>
+          <select class="form-select" name="portal_slug" required>
+            {% for slug in portales %}
+            <option value="{{ slug }}" {% if sugerido_slug == slug %}selected{% endif %}>{{ labels[slug] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Plan <span class="text-muted fw-normal">(opcional)</span></label>
+          <input class="form-control" name="plan" placeholder="Pro, Básico, Hostal…">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Nombre del negocio *</label>
+          <input class="form-control" name="nombre_negocio" required
+                 placeholder="Salón Glam, Cabañas Los Arrayanes…"
+                 value="{{ cliente.empresa or cliente.nombre if cliente else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email de acceso *</label>
+          <input type="email" class="form-control" name="email" required
+                 value="{{ cliente.email if cliente and cliente.email else '' }}">
+          <div class="form-text">Si no hay ficha CRM con este email, se crea una automáticamente.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Teléfono <span class="text-muted fw-normal">(opcional)</span></label>
+          <input class="form-control" name="telefono" placeholder="+56 9 …"
+                 value="{{ cliente.telefono if cliente and cliente.telefono else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Contraseña inicial</label>
+          <input class="form-control font-monospace" name="password" value="{{ password_sugerida }}" autocomplete="new-password">
+          <div class="form-text">Déjala en blanco para generar otra aleatoria.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Notas internas</label>
+          <input class="form-control" name="notas" placeholder="Pago transferencia 07/06…">
+        </div>
+        {% if cliente %}
+        <input type="hidden" name="cliente_id" value="{{ cliente.id }}">
+        {% endif %}
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="send_email" value="1" id="send_email" checked>
+            <label class="form-check-label" for="send_email">Enviar correo de bienvenida al cliente</label>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-4">
+        <button type="submit" class="btn btn-success btn-lg">
+          <i class="bi bi-check-lg"></i> Crear usuario
+        </button>
+        <a href="{{ url_for('commercial.saas_nuevo', cid=cliente.id) if cliente else url_for('commercial.saas_nuevo') }}"
+           class="btn btn-link">Formulario avanzado (elegir cliente manualmente)</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

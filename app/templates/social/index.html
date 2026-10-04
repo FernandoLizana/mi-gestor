@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% block title %}Redes Sociales{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h2 class="h4 mb-1"><i class="bi bi-megaphone"></i> Redes sociales</h2>
+    <p class="text-muted mb-0">Crea con IA → publica manual en ~2 minutos</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('publicidad.index') }}" class="btn btn-primary btn-sm"><i class="bi bi-bullseye"></i> Publicidad IA</a>
+    <a href="{{ url_for('social.imagen_directa') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-image"></i> Solo imagen</a>
+    <a href="{{ url_for('social.referencias') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-images"></i> Mis fotos</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <a href="{{ url_for('social.instagram') }}" class="social-hub-card social-hub-card--instagram text-decoration-none">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="social-hub-title"><i class="bi bi-instagram"></i> Instagram</div>
+          <div class="social-hub-meta">{{ stats_instagram.pendientes }} pendientes · {{ stats_instagram.publicadas }} publicadas</div>
+          {% if ig_metric %}<div class="small text-muted mt-1">{{ ig_metric.seguidores }} seguidores ({{ ig_metric.fecha.strftime('%d/%m') }})</div>{% endif %}
+        </div>
+        <span class="badge rounded-pill text-bg-light">{{ stats_instagram.likes }} likes</span>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-6">
+    <a href="{{ url_for('social.tiktok') }}" class="social-hub-card social-hub-card--tiktok text-decoration-none">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="social-hub-title"><i class="bi bi-tiktok"></i> TikTok</div>
+          <div class="social-hub-meta">{{ stats_tiktok.pendientes }} pendientes · {{ stats_tiktok.publicadas }} publicadas</div>
+          {% if tt_metric %}<div class="small text-muted mt-1">{{ tt_metric.seguidores }} seguidores ({{ tt_metric.fecha.strftime('%d/%m') }})</div>{% endif %}
+        </div>
+        <span class="badge rounded-pill text-bg-light">{{ stats_tiktok.vistas }} vistas</span>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="workflow-strip mb-3">
+  <div class="workflow-step"><span>1</span> Crear</div>
+  <div class="workflow-arrow"><i class="bi bi-chevron-right"></i></div>
+  <div class="workflow-step"><span>2</span> Descargar + copiar</div>
+  <div class="workflow-arrow"><i class="bi bi-chevron-right"></i></div>
+  <div class="workflow-step"><span>3</span> Publicar en la app</div>
+  <div class="workflow-arrow"><i class="bi bi-chevron-right"></i></div>
+  <div class="workflow-step"><span>4</span> Marcar hecho</div>
+</div>
+
+<div class="card p-3 mb-3 border-primary">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="h6 mb-0"><i class="bi bi-lightning-charge"></i> Crear contenido rápido</h3>
+    <span class="badge text-bg-primary">recomendado</span>
+  </div>
+  <form method="post" action="{{ url_for('social.quick_generate') }}">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label small">Plantilla</label>
+        <select class="form-select" name="plantilla">
+          <option value="">— Tema libre —</option>
+          {% for key, tpl in plantillas.items() %}
+          <option value="{{ key }}">{{ tpl.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">Plataforma</label>
+        <select class="form-select" name="plataforma">
+          <option value="instagram">Instagram</option>
+          <option value="tiktok">TikTok</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">Programar (opcional)</label>
+        <input type="datetime-local" class="form-control" name="fecha_programada">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">Formato</label>
+        <select class="form-select" name="formato">
+          <option value="post">post</option>
+          <option value="story">story</option>
+          <option value="reel">reel</option>
+        </select>
+      </div>
+      <div class="col-12">
+        <input class="form-control form-control-lg" name="tema_rapido" placeholder="O escribe tu tema aquí...">
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary btn-lg w-100" {% if not ai_configured %}disabled{% endif %}>
+          <i class="bi bi-magic"></i> Crear y publicar
+        </button>
+      </div>
+    </div>
+    {% include "social/_referencias_picker.html" %}
+  </form>
+  <div class="form-text">Genera texto + imagen y abre el asistente de publicación.{% if brand_signature %} Firma incluida al copiar.{% endif %}</div>
+</div>
+
+{% if pubs_hoy %}
+<div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <span><i class="bi bi-calendar-event"></i> <strong>{{ pubs_hoy|length }}</strong> publicación(es) programada(s) para hoy</span>
+  <a href="{{ url_for('social.publish_workflow', pid=pubs_hoy[0].id) }}" class="btn btn-sm btn-warning">Publicar la primera</a>
+</div>
+{% endif %}
+
+{% if pendientes %}
+<div class="mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="h6 mb-0"><i class="bi bi-send"></i> Pendientes de publicar <span class="badge text-bg-warning">{{ pendientes|length }}</span></h3>
+  </div>
+  <div class="row g-2">
+    {% for p in pendientes %}
+    <div class="col-md-6 col-xl-4">
+      <div class="card h-100 publish-queue-card">
+        <div class="card-body p-3">
+          <div class="d-flex gap-2">
+            {% if p.imagen_path %}
+            <img src="{{ crm_root }}/uploads/{{ p.imagen_path }}" alt="" class="rounded flex-shrink-0" style="width:72px;height:72px;object-fit:cover;">
+            {% else %}
+            <div class="rounded bg-light flex-shrink-0 d-flex align-items-center justify-content-center text-muted" style="width:72px;height:72px;"><i class="bi bi-image"></i></div>
+            {% endif %}
+            <div class="min-w-0 flex-grow-1">
+              <div class="small text-muted text-capitalize"><i class="bi bi-{{ p.plataforma }}"></i> {{ p.plataforma }}</div>
+              <div class="fw-semibold text-truncate">{{ p.titulo or '(sin título)' }}</div>
+              {% if p.fecha_programada %}
+              <div class="small text-muted"><i class="bi bi-clock"></i> {{ p.fecha_programada.strftime('%d/%m %H:%M') }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="d-grid gap-1 mt-3">
+            <a href="{{ url_for('social.publish_workflow', pid=p.id) }}" class="btn btn-primary btn-sm">
+              <i class="bi bi-send"></i> Publicar ahora
+            </a>
+            <a href="{{ url_for('social.edit_post', pid=p.id) }}" class="btn btn-outline-secondary btn-sm">Editar borrador</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<details class="card mb-3">
+  <summary class="card-header bg-transparent py-3" style="cursor:pointer;">
+    <i class="bi bi-stars"></i> Más opciones de IA (avanzado)
+  </summary>
+  <div class="card-body pt-0">
+    <form method="post" action="{{ url_for('social.generate_content') }}">
+      <div class="row g-2">
+        <div class="col-md-4"><input class="form-control" name="tema" placeholder="Tema del contenido"></div>
+        <div class="col-md-2"><select class="form-select" name="plataforma">
+          {% for pl in ['instagram','tiktok','facebook','linkedin'] %}<option>{{pl}}</option>{% endfor %}
+        </select></div>
+        <div class="col-md-2"><select class="form-select" name="formato">
+          {% for f in ['reel','carrusel','story','post'] %}<option>{{f}}</option>{% endfor %}
+        </select></div>
+        <div class="col-md-2"><select class="form-select" name="tono">
+          {% for t in ['cercano','místico','educativo','directo'] %}<option>{{t}}</option>{% endfor %}
+        </select></div>
+        <div class="col-md-1"><input class="form-control" type="number" min="1" max="8" value="3" name="cantidad" title="Cantidad"></div>
+        <div class="col-md-1"><select class="form-select" name="modo" title="Modo">
+          <option value="semiautomatico">Semi</option>
+          <option value="automatico">Auto</option>
+        </select></div>
+      </div>
+      <div class="form-check mt-2">
+        <input class="form-check-input" type="checkbox" name="generar_imagen" id="generar_imagen">
+        <label class="form-check-label" for="generar_imagen">Incluir imagen IA</label>
+      </div>
+      {% include "social/_referencias_picker.html" %}
+      <div class="text-end mt-2"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-magic"></i> Generar lote</button></div>
+    </form>
+  </div>
+</details>
+
+<ul class="nav nav-tabs" id="t" role="tablist">
+  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pubs">Historial</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tareas">Tareas DM</button></li>
+</ul>
+<div class="tab-content pt-3">
+  <div class="tab-pane fade show active" id="pubs">
+    <div class="card"><div class="card-body p-0">
+    <table class="table table-hover mb-0 align-middle">
+      <thead><tr><th></th><th>Título</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+      {% for p in pubs %}
+      <tr>
+        <td class="text-capitalize" style="width:100px;">
+          <i class="bi bi-{{ p.plataforma }} platform-{{p.plataforma}}"></i> {{ p.plataforma }}
+        </td>
+        <td>
+          {% if p.imagen_path %}<img src="{{ crm_root }}/uploads/{{ p.imagen_path }}" alt="" class="rounded me-2" style="width:36px;height:36px;object-fit:cover;">{% endif %}
+          {{ p.titulo or '(sin título)' }}
+          {% if p.estado == 'publicada' %}<span class="badge bg-success ms-1">publicada</span>{% endif %}
+        </td>
+        <td>
+          {% if p.fecha_programada and p.estado != 'publicada' %}
+          <span class="text-muted small">{{ p.fecha_programada.strftime('%d-%m %H:%M') }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td class="text-end text-nowrap">
+          {% if p.estado != 'publicada' %}
+          <a href="{{ url_for('social.publish_workflow', pid=p.id) }}" class="btn btn-sm btn-primary">Publicar</a>
+          {% endif %}
+          <a href="{{ url_for('social.edit_post', pid=p.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+          <form method="post" action="{{ url_for('social.delete_post', pid=p.id) }}" class="d-inline" onsubmit="return confirm('¿Eliminar?')">
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="text-muted text-center p-4">Sin publicaciones. Usa <strong>Crear y publicar</strong> arriba.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div></div>
+  </div>
+
+  <div class="tab-pane fade" id="tareas">
+    <form method="post" action="{{ url_for('social.new_task') }}" class="card p-3 mb-3">
+      <div class="row g-2">
+        <div class="col-md-2"><select class="form-select" name="plataforma">
+          {% for pl in ['instagram','linkedin','facebook','tiktok'] %}<option>{{pl}}</option>{% endfor %}
+        </select></div>
+        <div class="col-md-2"><select class="form-select" name="tipo">
+          {% for t in ['DM','comentar','seguir','responder','dar like'] %}<option>{{t}}</option>{% endfor %}
+        </select></div>
+        <div class="col-md-3"><input class="form-control" name="objetivo" placeholder="@usuario o link"></div>
+        <div class="col-md-3"><input class="form-control" name="mensaje" placeholder="Mensaje (opcional)"></div>
+        <div class="col-md-2"><input type="datetime-local" class="form-control" name="fecha"></div>
+      </div>
+      <div class="mt-2 text-end"><button class="btn btn-primary btn-sm">Agregar tarea</button></div>
+    </form>
+    <div class="card"><div class="card-body p-0">
+    <table class="table mb-0">
+      <thead><tr><th></th><th>Plataforma</th><th>Tipo</th><th>Objetivo</th><th>Mensaje</th><th></th></tr></thead>
+      <tbody>
+      {% for t in tareas %}
+      <tr class="{{ 'task-done' if t.completada else '' }}">
+        <td><form method="post" action="{{ url_for('social.toggle_task', tid=t.id) }}">
+          <button class="btn btn-sm btn-outline-success"><i class="bi bi-{{ 'check-square' if t.completada else 'square' }}"></i></button></form></td>
+        <td>{{ t.plataforma }}</td>
+        <td>{{ t.tipo }}</td><td>{{ t.objetivo }}</td><td class="small">{{ (t.mensaje or '')[:80] }}</td>
+        <td><form method="post" action="{{ url_for('social.delete_task', tid=t.id) }}"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td>
+      </tr>
+      {% else %}<tr><td colspan="6" class="text-muted text-center p-3">Sin tareas.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

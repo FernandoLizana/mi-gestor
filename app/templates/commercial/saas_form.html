@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Crear cuenta SaaS{% endblock %}
+{% block content %}
+{% include "commercial/_nav_comercial.html" %}
+<h2>Crear cuenta SaaS</h2>
+<p class="text-muted">Genera un acceso en <code>/portal/&lt;portal&gt;/acceso</code> para un cliente que ya pagó.</p>
+
+<form method="post" class="card p-4 mt-3">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Cliente CRM *</label>
+      <select class="form-select" name="cliente_id" required {% if cliente %}disabled{% endif %}>
+        {% if cliente %}
+        <option value="{{ cliente.id }}" selected>{{ cliente.empresa or cliente.nombre }}</option>
+        {% else %}
+        <option value="">— Seleccionar —</option>
+        {% for cl in clientes %}
+        <option value="{{ cl.id }}">{{ cl.empresa or cl.nombre }} ({{ cl.producto_interes or 'sin producto' }})</option>
+        {% endfor %}
+        {% endif %}
+      </select>
+      {% if cliente %}<input type="hidden" name="cliente_id" value="{{ cliente.id }}">{% endif %}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Portal SaaS *</label>
+      <select class="form-select" name="portal_slug" required>
+        {% for slug in portales %}
+        <option value="{{ slug }}" {% if sugerido_slug == slug %}selected{% endif %}>{{ labels[slug] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Nombre del negocio *</label>
+      <input class="form-control" name="nombre_negocio" required value="{{ cliente.empresa or cliente.nombre if cliente else '' }}">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Plan</label>
+      <input class="form-control" name="plan" placeholder="Pro, Hostal, Studio...">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Email de acceso *</label>
+      <input type="email" class="form-control" name="email" required value="{{ cliente.email if cliente and cliente.email else '' }}">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Contraseña inicial</label>
+      <input class="form-control" name="password" value="{{ password_sugerida }}" autocomplete="new-password">
+      <div class="form-text">Déjala en blanco para generar una automática.</div>
+    </div>
+    <div class="col-12">
+      <label class="form-label">Notas internas</label>
+      <textarea class="form-control" name="notas" rows="2"></textarea>
+    </div>
+    <div class="col-12">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="send_email" value="1" id="send_email" checked>
+        <label class="form-check-label" for="send_email">Enviar correo de bienvenida al cliente, si el envío está configurado</label>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-success mt-3">Crear cuenta SaaS</button>
+  <a href="{{ url_for('commercial.saas_list') }}" class="btn btn-link">Cancelar</a>
+</form>
+{% endblock %}
