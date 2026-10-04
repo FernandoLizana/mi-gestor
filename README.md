@@ -170,7 +170,7 @@ Cubren el asistente, que una segunda persona no pueda tomar la instalación, que
 
 No subas `.env`, `data.sqlite`, `uploads/` ni `backups/`. El `.gitignore` ya los excluye. No pongas claves de API en el código ni en `.env.example`.
 
-Este repositorio no incluye una licencia. Antes de hacerlo público hay que elegir una. Publicar el código no otorga por sí solo permiso de uso.
+El código se distribuye bajo la licencia MIT. El texto está en `LICENSE`. Puedes usarlo, copiarlo y modificarlo, siempre que conserves el aviso de copyright y la licencia.
 
 ## Mapa de carpetas
 
