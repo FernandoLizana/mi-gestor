@@ -30,7 +30,7 @@ def create_app(mount_path=None, config_overrides=None):
     db_uri = build_database_uri(base_dir)
     app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "local-dev-only")
+    app.config["SECRET_KEY"] = (os.environ.get("SECRET_KEY") or "").strip()
     app.config["BASE_DIR"] = base_dir
     app.config["UPLOAD_FOLDER"] = os.path.join(base_dir, "uploads")
     app.config["SESSION_COOKIE_HTTPONLY"] = True
@@ -38,6 +38,7 @@ def create_app(mount_path=None, config_overrides=None):
     if config_overrides:
         app.config.update(config_overrides)
         db_uri = app.config["SQLALCHEMY_DATABASE_URI"]
+    _require_secret(app)
     if not is_sqlite_uri(db_uri):
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
             "pool_recycle": 280,
@@ -165,6 +166,24 @@ def create_app(mount_path=None, config_overrides=None):
         apply_schema_steps(base_dir, db_uri, testing=bool(app.config.get("TESTING")))
 
     return app
+
+
+_WEAK_SECRETS = {
+    "",
+    "local-dev-only",
+    "cambia-esta-clave",
+    "cambia-esta-clave-por-una-larga",
+}
+
+
+def _require_secret(app):
+    if app.config.get("TESTING"):
+        return
+    key = (app.config.get("SECRET_KEY") or "").strip()
+    if key in _WEAK_SECRETS or len(key) < 24:
+        raise RuntimeError(
+            "Define SECRET_KEY en .env con una cadena aleatoria de al menos 24 caracteres."
+        )
 
 
 def _migrate_sqlite():

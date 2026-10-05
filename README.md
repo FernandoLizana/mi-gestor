@@ -112,7 +112,7 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Abre `.env` y cambia `SECRET_KEY` por una cadena larga y aleatoria. No dejes la del ejemplo si alguien más puede entrar al servidor.
+Abre `.env` y escribe en `SECRET_KEY` una cadena aleatoria de al menos 24 caracteres. Sin eso la aplicación no arranca. No reutilices una clave publicada ni la dejes vacía en un servidor.
 
 ```powershell
 .\.venv\Scripts\python.exe run.py

@@ -7,6 +7,13 @@ from .tenancy import Membresia, Usuario, installation_ready
 bp = Blueprint("auth", __name__)
 
 
+def _safe_next(url: str) -> str:
+    url = (url or "").strip()
+    if not url.startswith("/") or url.startswith("//") or "\\" in url:
+        return ""
+    return url
+
+
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     if not installation_ready():
@@ -17,8 +24,9 @@ def login():
         if not current or not current.activo:
             session.clear()
         else:
-            if next_url.startswith("/") and not next_url.startswith("//"):
-                return redirect(next_url)
+            safe = _safe_next(next_url)
+            if safe:
+                return redirect(safe)
             return redirect(url_for("dashboard.index"))
 
     if request.method == "POST":
@@ -43,9 +51,7 @@ def login():
                 session["crm_auth"] = True
                 session["crm_user"] = user.nombre
                 session.permanent = True
-                if next_url.startswith("/") and not next_url.startswith("//"):
-                    return redirect(next_url)
-                return redirect(url_for("dashboard.index"))
+                return redirect(_safe_next(next_url) or url_for("dashboard.index"))
 
     featured, team_others = build_login_team()
     crm_root = request.script_root or current_app.config.get("CRM_MOUNT_PATH", "")

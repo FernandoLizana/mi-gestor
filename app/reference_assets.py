@@ -45,18 +45,25 @@ def save_reference_upload(file_storage, upload_folder: str) -> str:
     return f"{REF_SUBFOLDER}/{filename}"
 
 
-def delete_reference(rel_path: str, upload_folder: str):
-    if not rel_path or not rel_path.startswith(f"{REF_SUBFOLDER}/"):
+def _reference_file(upload_folder: str, rel_path: str) -> str:
+    rel = (rel_path or "").replace("\\", "/").strip()
+    if not rel.startswith(f"{REF_SUBFOLDER}/") or ".." in rel.split("/"):
         raise ValueError("Ruta no válida")
-    full = os.path.join(upload_folder, rel_path)
+    root = os.path.realpath(referencias_dir(upload_folder))
+    full = os.path.realpath(os.path.join(upload_folder, rel))
+    if os.path.commonpath([root, full]) != root:
+        raise ValueError("Ruta no válida")
+    return full
+
+
+def delete_reference(rel_path: str, upload_folder: str):
+    full = _reference_file(upload_folder, rel_path)
     if os.path.isfile(full):
         os.remove(full)
 
 
 def load_reference_as_data_url(upload_folder: str, rel_path: str) -> str:
-    if not rel_path or not rel_path.startswith(f"{REF_SUBFOLDER}/"):
-        raise ValueError("Ruta no válida")
-    full = os.path.join(upload_folder, rel_path)
+    full = _reference_file(upload_folder, rel_path)
     if not os.path.isfile(full):
         raise FileNotFoundError(rel_path)
 

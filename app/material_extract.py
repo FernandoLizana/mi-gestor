@@ -11,7 +11,7 @@ def extract_pdf_text(upload_folder: str, rel_path: str, max_chars: int = 12000) 
     except ImportError as e:
         raise RuntimeError("Instala pypdf: pip install pypdf") from e
 
-    full = os.path.join(upload_folder, rel_path)
+    full = _file_inside_uploads(upload_folder, rel_path)
     if not os.path.isfile(full):
         raise FileNotFoundError(rel_path)
 
@@ -27,8 +27,19 @@ def extract_pdf_text(upload_folder: str, rel_path: str, max_chars: int = 12000) 
     return joined[:max_chars] if joined else ""
 
 
+def _file_inside_uploads(upload_folder: str, rel_path: str) -> str:
+    rel = (rel_path or "").replace("\\", "/").strip()
+    if not rel or rel.startswith("/") or ".." in rel.split("/"):
+        raise ValueError("Ruta no válida")
+    root = os.path.realpath(upload_folder)
+    full = os.path.realpath(os.path.join(upload_folder, rel))
+    if os.path.commonpath([root, full]) != root:
+        raise ValueError("Ruta no válida")
+    return full
+
+
 def file_as_data_url(upload_folder: str, rel_path: str) -> str:
-    full = os.path.join(upload_folder, rel_path)
+    full = _file_inside_uploads(upload_folder, rel_path)
     if not os.path.isfile(full):
         raise FileNotFoundError(rel_path)
     mime, _ = mimetypes.guess_type(full)
